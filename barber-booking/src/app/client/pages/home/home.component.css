@@ -1,0 +1,166 @@
+.toolbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
+  color: white;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 56px;
+}
+
+.logo {
+  font-weight: 600;
+  font-size: 1rem; /* mobile-friendly */
+}
+
+.spacer {
+  flex: 1;
+}
+
+.toolbar button {
+  font-size: 0.9rem;
+  min-width: auto;
+  padding: 6px 12px;
+}
+
+/* HERO */
+.hero {
+  position: relative; /* NE absolute na mobile */
+  min-height: 100vh; /* hero manji na mobilnom, footer ispod */
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  padding: 16px;
+}
+
+.hero-content h1 {
+  font-size: 1.8rem; /* mobile */
+  margin-bottom: 10px;
+}
+
+.hero-content p {
+  font-size: 1rem; /* mobile */
+  margin-bottom: 16px;
+}
+
+.cta-button {
+  padding: 10px 24px; /* mobile-friendly */
+  font-size: 1rem;
+}
+
+/* FOOTER */
+.footer {
+  position: relative; /* sada je u hero kontekstu */
+  bottom: auto; /* mali padding od dna slike */
+  background: transparent;
+  color: #e5e7eb;
+  padding: 16px 0;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column; /* mobile: jedna kolona */
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.footer h3 {
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.footer p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+
+.footer-bottom {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+}
+
+/* DESKTOP */
+@media (min-width: 768px) {
+  .hero {
+    position: relative;
+    height: 100vh; /* full screen hero */
+  }
+
+  .hero-content {
+    position: absolute; /* centrirano unutar hero */
+    inset: 0;
+  }
+
+  .footer {
+    position: absolute; /* footer lebdi na dnu hero */
+    bottom: 16px;
+    left: 0;
+    width: 100%;
+    padding: 0 16px;
+  }
+  .footer-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+  }
+
+  .toolbar button {
+    font-size: 1rem;
+    padding: 8px 16px;
+  }
+
+  .hero-content h1 {
+    font-size: 2.8rem;
+  }
+
+  .hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 28px;
+  }
+
+  .cta-button {
+    padding: 12px 28px;
+    font-size: 1.1rem;
+  }
+}
