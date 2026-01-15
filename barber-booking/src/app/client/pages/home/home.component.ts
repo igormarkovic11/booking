@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-home',
@@ -16,8 +17,19 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     MatCardModule,
     MatButtonModule,
     MatToolbarModule,
+    MatIconModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent {}
+export class HomeComponent {
+  menuOpen = false;
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu() {
+    this.menuOpen = false;
+  }
+}

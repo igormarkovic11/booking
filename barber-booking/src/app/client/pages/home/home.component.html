@@ -1,8 +1,40 @@
 <mat-toolbar class="toolbar">
   <span class="logo">Barber Shop</span>
+
   <span class="spacer"></span>
-  <button mat-button routerLink="/booking">Zakaži termin</button>
+
+  <!-- DESKTOP LINKS -->
+  <nav class="nav-links">
+    <a mat-button routerLink="/about">O nama</a>
+    <a mat-button routerLink="/contact">Kontakt</a>
+    <a mat-button routerLink="/location">Lokacija</a>
+  </nav>
+
+  <!-- BOOKING BUTTON -->
+  <button
+    mat-raised-button
+    color="primary"
+    class="booking-btn"
+    routerLink="/booking"
+  >
+    Zakaži termin
+  </button>
+
+  <!-- HAMBURGER (MOBILE) -->
+  <button mat-icon-button class="menu-btn" (click)="toggleMenu()">
+    <mat-icon>menu</mat-icon>
+  </button>
 </mat-toolbar>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" *ngIf="menuOpen">
+  <a routerLink="/about" (click)="closeMenu()">O nama</a>
+  <a routerLink="/contact" (click)="closeMenu()">Kontakt</a>
+  <a routerLink="/location" (click)="closeMenu()">Lokacija</a>
+  <a routerLink="/booking" class="highlight" (click)="closeMenu()">
+    Zakaži termin
+  </a>
+</div>
 
 <div class="hero-wrapper">
   <section class="hero">
