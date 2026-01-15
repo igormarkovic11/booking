@@ -1,0 +1,65 @@
+<mat-toolbar class="toolbar">
+  <span class="logo">Barber Shop</span>
+
+  <span class="spacer"></span>
+
+  <!-- DESKTOP LINKS -->
+  <nav class="nav-links">
+    <a
+      mat-button
+      routerLink="/about"
+      routerLinkActive="active-link"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      O nama
+    </a>
+    <a mat-button routerLink="/contact" routerLinkActive="active-link"
+      >Kontakt</a
+    >
+    <a mat-button routerLink="/location" routerLinkActive="active-link"
+      >Lokacija</a
+    >
+  </nav>
+
+  <!-- BOOKING BUTTON -->
+  <button
+    mat-raised-button
+    color="primary"
+    class="booking-btn"
+    routerLink="/booking"
+  >
+    Zakaži termin
+  </button>
+
+  <!-- HAMBURGER (MOBILE) -->
+  <button mat-icon-button class="menu-btn" (click)="toggleMenu()">
+    <mat-icon>menu</mat-icon>
+  </button>
+</mat-toolbar>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" *ngIf="menuOpen">
+  <a routerLink="/about" routerLinkActive="active-mobile" (click)="closeMenu()"
+    >O nama</a
+  >
+  <a
+    routerLink="/contact"
+    routerLinkActive="active-mobile"
+    (click)="closeMenu()"
+    >Kontakt</a
+  >
+  <a
+    routerLink="/location"
+    routerLinkActive="active-mobile"
+    (click)="closeMenu()"
+    >Lokacija</a
+  >
+  <a
+    routerLink="/booking"
+    routerLinkActive="active-mobile"
+    class="highlight"
+    (click)="closeMenu()"
+  >
+    Zakaži termin
+  </a>
+</div>

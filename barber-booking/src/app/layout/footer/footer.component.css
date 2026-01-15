@@ -1,0 +1,28 @@
+/* FOOTER unutar wrapper-a – scrolla se preko pozadine */
+.footer {
+  position: relative;
+  padding: 32px 16px;
+  background: rgba(0, 0, 0, 0.55); /* tamni overlay */
+  text-align: center;
+}
+
+.footer-content {
+  margin: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.footer-bottom {
+  margin-top: 16px;
+  font-size: 0.85rem;
+}
+/* DESKTOP */
+@media (min-width: 768px) {
+  .footer-content {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}

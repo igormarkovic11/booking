@@ -1,0 +1,23 @@
+.app-background {
+  min-height: 100vh;
+  background-image: url("/assets/images/background.jpg"); /* HERO / background */
+  background-size: cover;
+  background-position: center; /* desktop centrirano */
+  background-attachment: fixed;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-background::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55); /* tamni overlay */
+  z-index: -1;
+}
+
+.content {
+  flex: 1;
+  padding-top: 56px; /* zbog fixed toolbar */
+}

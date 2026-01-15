@@ -9,7 +9,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-toolbar',
   standalone: true,
   imports: [
     CommonModule,
@@ -19,7 +19,25 @@ import { MatIconModule } from '@angular/material/icon';
     MatToolbarModule,
     MatIconModule,
   ],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css',
+  templateUrl: './toolbar.component.html',
+  styleUrl: './toolbar.component.css',
 })
-export class HomeComponent {}
+export class ToolbarComponent {
+  menuOpen = false;
+
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu() {
+    this.menuOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event) {
+    const menu = document.querySelector('.mobile-menu');
+    if (this.menuOpen && menu && !menu.contains(event.target as Node)) {
+      this.menuOpen = false;
+    }
+  }
+}
