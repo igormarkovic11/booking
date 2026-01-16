@@ -83,6 +83,11 @@
   font-size: 1rem;
 }
 
+.logo-link {
+  text-decoration: none;
+  color: inherit; /* da zadrži bijelu boju */
+}
+
 .spacer {
   flex: 1;
 }
