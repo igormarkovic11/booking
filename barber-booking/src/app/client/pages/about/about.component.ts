@@ -1,13 +1,13 @@
 import { AfterViewInit, Component, ElementRef } from '@angular/core';
 
 @Component({
-  selector: 'app-contact',
+  selector: 'app-about',
   standalone: true,
   imports: [],
-  templateUrl: './contact.component.html',
-  styleUrl: './contact.component.css',
+  templateUrl: './about.component.html',
+  styleUrl: './about.component.css',
 })
-export class ContactComponent implements AfterViewInit {
+export class AboutComponent implements AfterViewInit {
   constructor(private el: ElementRef) {}
 
   ngAfterViewInit() {
