@@ -4,7 +4,6 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background: url("/assets/images/background.jpg") no-repeat center center;
   background-size: cover;
 }
 
@@ -16,14 +15,6 @@
   border-radius: 20px;
   padding: 20px 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-  color: white; /* sav tekst bijel */
-}
-
-.booking-card h2,
-.step-instruction,
-.services-title,
-.mat-checkbox-label,
-.mat-form-field-label {
   color: white;
 }
 
@@ -39,6 +30,24 @@
   font-size: 0.95rem;
   opacity: 0.85;
   text-align: center;
+}
+
+/* DROPDOWN */
+.date-dropdown {
+  width: 100%;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 16px;
+  font-size: 1rem;
+  cursor: pointer; /* dodaj ovo */
+}
+
+.date-dropdown option {
+  background: #333;
+  color: white;
 }
 
 /* TERMINI */
@@ -57,20 +66,17 @@
   color: white;
   background: rgba(255, 255, 255, 0.05);
   transition: all 0.2s ease;
-}
-
-.time-grid button:hover {
-  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer; /* dodaj ovo */
 }
 
 .time-grid button.active {
   background: #1976d2;
   color: white;
-  font-weight: 600;
   border: none;
+  font-weight: 600;
 }
 
-/* USLUGE */
+/* CHECKBOXOVI */
 .services-box {
   background: rgba(255, 255, 255, 0.06);
   border-radius: 14px;
@@ -84,62 +90,57 @@
   margin-bottom: 8px;
 }
 
-.mat-checkbox-label {
+.checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: white;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  cursor: pointer; /* dodaj ovo */
 }
 
-.mat-checkbox .mat-checkbox-frame {
-  border-color: rgb(255, 255, 255);
-}
-
-.mat-checkbox .mat-checkbox-background {
-  background-color: #1976d2;
-}
-
-.mat-checkbox-label {
-  color: white; /* bijeli tekst */
-}
-
-.full-width {
-  width: 100%;
-}
-
-button.full-width {
-  margin-top: 16px;
-}
-
-/* DROP DOWN PANEL */
-.date-dropdown-panel .mat-select-panel {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-}
-
-/* USLUGE / CHECKBOXOVI */
-.white-checkbox .mat-checkbox-frame {
-  border-color: white !important;
-}
-
-.white-checkbox .mat-checkbox-background {
-  background-color: #1976d2 !important;
-}
-
-.white-checkbox .mat-checkbox-label {
-  color: white !important;
+.checkboxes input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1976d2; /* moderni blue za checkbox */
+  cursor: pointer; /* dodaj ovo */
 }
 
 /* INPUT POLJA */
-.custom-input .mat-form-field-flex {
-  background: rgba(255, 255, 255, 0.05);
+.custom-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 16px;
   border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 1rem;
 }
 
-.custom-input .mat-form-field-label {
-  color: white;
+.custom-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.custom-input input {
+/* DUGME */
+.submit-btn {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 12px;
+  background: #1976d2;
   color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
+
+.submit-btn:disabled {
+  background: rgba(25, 118, 210, 0.5);
+  cursor: not-allowed;
+}
+
 /* DESKTOP */
 @media (min-width: 768px) {
   .time-grid {
@@ -154,8 +155,7 @@ button.full-width {
     font-size: 1.8rem;
   }
 
-  button.full-width {
-    height: 48px;
+  .submit-btn {
     font-size: 1.1rem;
   }
 }

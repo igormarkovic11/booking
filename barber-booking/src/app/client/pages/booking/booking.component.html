@@ -4,20 +4,16 @@
 
     <!-- DATUM -->
     <p class="step-instruction">Izaberi datum</p>
-    <mat-form-field appearance="fill" class="full-width">
-      <mat-label>Datum</mat-label>
-      <mat-select [(value)]="selectedDate" panelClass="date-dropdown-panel">
-        <mat-option *ngFor="let date of nextDates" [value]="date">
-          {{ date | date : "EEEE, dd.MM.yyyy" }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    <select [(ngModel)]="selectedDate" class="date-dropdown">
+      <option *ngFor="let date of nextDates" [ngValue]="date">
+        {{ date | date : "EEEE, dd.MM.yyyy" }}
+      </option>
+    </select>
 
     <!-- TERMINI -->
     <p class="step-instruction">Odaberite termin</p>
     <div class="time-grid">
       <button
-        mat-stroked-button
         *ngFor="let time of times"
         (click)="selectTime(time)"
         [class.active]="selectedTime === time"
@@ -29,31 +25,34 @@
     <!-- USLUGE -->
     <div class="services-box">
       <p class="services-title">Šta planiraš? <span>(opciono)</span></p>
-      <mat-checkbox
-        *ngFor="let service of services"
-        (change)="toggleService(service)"
-        [checked]="selectedServices.includes(service)"
-        class="white-checkbox"
-      >
-        {{ service }}
-      </mat-checkbox>
+      <div class="checkboxes">
+        <label *ngFor="let service of services">
+          <input
+            type="checkbox"
+            [checked]="selectedServices.includes(service)"
+            (change)="toggleService(service)"
+          />
+          <span>{{ service }}</span>
+        </label>
+      </div>
     </div>
 
     <!-- PODACI -->
-    <mat-form-field appearance="fill" class="full-width custom-input">
-      <mat-label>Ime</mat-label>
-      <input matInput [(ngModel)]="name" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill" class="full-width custom-input">
-      <mat-label>Telefon</mat-label>
-      <input matInput [(ngModel)]="phone" />
-    </mat-form-field>
+    <input
+      type="text"
+      placeholder="Ime"
+      [(ngModel)]="name"
+      class="custom-input"
+    />
+    <input
+      type="text"
+      placeholder="Telefon"
+      [(ngModel)]="phone"
+      class="custom-input"
+    />
 
     <button
-      mat-raised-button
-      color="primary"
-      class="full-width"
+      class="full-width submit-btn"
       (click)="submitBooking()"
       [disabled]="!selectedTime || !name || !phone"
     >
