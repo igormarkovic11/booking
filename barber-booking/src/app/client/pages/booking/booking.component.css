@@ -1,0 +1,161 @@
+.booking-page {
+  min-height: 100vh;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: url("/assets/images/background.jpg") no-repeat center center;
+  background-size: cover;
+}
+
+.booking-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 20px 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  color: white; /* sav tekst bijel */
+}
+
+.booking-card h2,
+.step-instruction,
+.services-title,
+.mat-checkbox-label,
+.mat-form-field-label {
+  color: white;
+}
+
+.booking-card h2 {
+  text-align: center;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.step-instruction {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  text-align: center;
+}
+
+/* TERMINI */
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.time-grid button {
+  height: 44px;
+  font-size: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.time-grid button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.time-grid button.active {
+  background: #1976d2;
+  color: white;
+  font-weight: 600;
+  border: none;
+}
+
+/* USLUGE */
+.services-box {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.services-title {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.mat-checkbox-label {
+  color: white;
+}
+
+.mat-checkbox .mat-checkbox-frame {
+  border-color: rgb(255, 255, 255);
+}
+
+.mat-checkbox .mat-checkbox-background {
+  background-color: #1976d2;
+}
+
+.mat-checkbox-label {
+  color: white; /* bijeli tekst */
+}
+
+.full-width {
+  width: 100%;
+}
+
+button.full-width {
+  margin-top: 16px;
+}
+
+/* DROP DOWN PANEL */
+.date-dropdown-panel .mat-select-panel {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+/* USLUGE / CHECKBOXOVI */
+.white-checkbox .mat-checkbox-frame {
+  border-color: white !important;
+}
+
+.white-checkbox .mat-checkbox-background {
+  background-color: #1976d2 !important;
+}
+
+.white-checkbox .mat-checkbox-label {
+  color: white !important;
+}
+
+/* INPUT POLJA */
+.custom-input .mat-form-field-flex {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.custom-input .mat-form-field-label {
+  color: white;
+}
+
+.custom-input input {
+  color: white;
+}
+/* DESKTOP */
+@media (min-width: 768px) {
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .booking-card {
+    padding: 32px 24px;
+  }
+
+  .booking-card h2 {
+    font-size: 1.8rem;
+  }
+
+  button.full-width {
+    height: 48px;
+    font-size: 1.1rem;
+  }
+}
