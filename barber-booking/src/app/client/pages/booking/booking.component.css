@@ -69,11 +69,23 @@
   cursor: pointer; /* dodaj ovo */
 }
 
+.time-grid button.booked {
+  opacity: 0.4;
+  pointer-events: none;
+  text-decoration: line-through;
+}
+
 .time-grid button.active {
   background: #1976d2;
   color: white;
   border: none;
   font-weight: 600;
+}
+
+/* hover efekt */
+.time-grid button:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
 }
 
 /* CHECKBOXOVI */

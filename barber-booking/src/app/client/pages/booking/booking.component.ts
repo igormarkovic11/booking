@@ -1,34 +1,22 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatOptionModule } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
+import { BookingService } from '../../../core/services/booking.service';
 
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatOptionModule,
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.scss'],
 })
-export class BookingComponent {
-  nextDates: Date[] = [];
-  selectedDate: Date;
+export class BookingComponent implements OnInit {
+  /* ---------- DATUMI ---------- */
+  availableDates: string[] = [];
+  selectedDate!: string;
 
-  times = [
+  /* ---------- TERMINI ---------- */
+  allTimes: string[] = [
     '09:00',
     '09:30',
     '10:00',
@@ -46,66 +34,136 @@ export class BookingComponent {
     '16:00',
     '16:30',
     '17:00',
-    '17:30',
-    '18:00',
   ];
+
+  bookedTimes: string[] = [];
   selectedTime: string | null = null;
 
-  services = ['Šišanje', 'Brijanje', 'Stilizovanje', 'Trimovanje'];
-  selectedServices: string[] = [];
+  /* ---------- USLUGE ---------- */
+  services = [
+    { label: 'Šišanje', value: 'sisanje', selected: false },
+    { label: 'Brijanje', value: 'brijanje', selected: false },
+    { label: 'Stilizovanje', value: 'stilizovanje', selected: false },
+    { label: 'Trimovanje', value: 'trimovanje', selected: false },
+  ];
 
-  name: string = '';
-  phone: string = '';
+  /* ---------- PODACI KORISNIKA ---------- */
+  name = '';
+  phone = '';
 
-  constructor() {
-    this.generateNextDates();
-    this.selectedDate = this.nextDates[0]; // default = danasnji datum
+  /* ---------- UI STATE ---------- */
+  loading = false;
+  errorMessage = '';
+  successMessage = '';
+
+  constructor(private bookingService: BookingService) {}
+
+  /* ---------- INIT ---------- */
+  ngOnInit(): void {
+    this.generateDates();
+    this.selectedDate = this.availableDates[0]; // default = danas
+    this.loadBookedTimes();
   }
 
-  generateNextDates() {
+  /* ---------- GENERIŠI DANAS + NAREDNA 2 ---------- */
+  generateDates() {
     const today = new Date();
-    this.nextDates = [];
+
     for (let i = 0; i < 3; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() + i);
-      this.nextDates.push(d);
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      this.availableDates.push(date.toISOString().split('T')[0]);
     }
   }
 
+  /* ---------- PROMJENA DATUMA ---------- */
+  async onDateChange() {
+    this.selectedTime = null;
+    await this.loadBookedTimes();
+  }
+
+  /* ---------- UČITAJ ZAUZETE TERMINE ---------- */
+  async loadBookedTimes() {
+    this.bookedTimes = await this.bookingService.getBookedTimesForDate(
+      this.selectedDate,
+    );
+  }
+
+  /* ---------- DA LI JE TERMIN ZAUZET ---------- */
+  isTimeBooked(time: string): boolean {
+    return this.bookedTimes.includes(time);
+  }
+
+  /* ---------- ODABIR TERMINA ---------- */
   selectTime(time: string) {
-    this.selectedTime = time;
-  }
-
-  toggleService(service: string) {
-    if (this.selectedServices.includes(service)) {
-      this.selectedServices = this.selectedServices.filter(
-        (s) => s !== service
-      );
+    if (this.selectedTime === time) {
+      this.selectedTime = null;
     } else {
-      this.selectedServices.push(service);
+      this.selectedTime = time;
     }
   }
 
-  submitBooking() {
-    if (!this.selectedTime || !this.name || !this.phone) {
-      alert('Molimo popunite sve obavezne podatke!');
+  /* ---------- CHECKBOX USLUGE ---------- */
+  toggleService(service: any) {
+    service.selected = !service.selected;
+  }
+
+  getSelectedServices(): string[] {
+    return this.services.filter((s) => s.selected).map((s) => s.label);
+  }
+
+  /* ---------- SUBMIT ---------- */
+  async submitBooking() {
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (!this.selectedDate || !this.selectedTime) {
+      this.errorMessage = 'Odaberi datum i termin';
       return;
     }
 
-    const booking = {
-      date: this.selectedDate,
-      time: this.selectedTime,
-      services: this.selectedServices,
-      name: this.name,
-      phone: this.phone,
-    };
+    if (!this.name.trim() || !this.phone.trim()) {
+      this.errorMessage = 'Unesi ime i broj telefona';
+      return;
+    }
 
-    console.log('Booking submitted:', booking);
-    alert('Termin uspješno zakazan!');
+    this.loading = true;
 
+    try {
+      const isAvailable = await this.bookingService.isSlotAvailable(
+        this.selectedDate,
+        this.selectedTime,
+      );
+
+      if (!isAvailable) {
+        this.errorMessage = 'Termin je upravo zauzet 😕';
+        this.loading = false;
+        return;
+      }
+
+      await this.bookingService.createBooking({
+        date: this.selectedDate,
+        time: this.selectedTime,
+        services: this.getSelectedServices(),
+        name: this.name,
+        phone: this.phone,
+      });
+
+      this.successMessage = 'Termin uspješno zakazan ✅';
+      this.resetForm();
+    } catch (error) {
+      this.errorMessage = 'Došlo je do greške, pokušaj ponovo';
+    }
+
+    this.loading = false;
+    await this.loadBookedTimes();
+  }
+
+  /* ---------- RESET ---------- */
+  resetForm() {
     this.selectedTime = null;
-    this.selectedServices = [];
     this.name = '';
     this.phone = '';
+    this.services.forEach((s) => (s.selected = false));
   }
 }

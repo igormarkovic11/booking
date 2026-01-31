@@ -4,9 +4,13 @@
 
     <!-- DATUM -->
     <p class="step-instruction">Izaberi datum</p>
-    <select [(ngModel)]="selectedDate" class="date-dropdown">
-      <option *ngFor="let date of nextDates" [ngValue]="date">
-        {{ date | date : "EEEE, dd.MM.yyyy" }}
+    <select
+      [(ngModel)]="selectedDate"
+      (change)="onDateChange()"
+      class="date-dropdown"
+    >
+      <option *ngFor="let date of availableDates" [ngValue]="date">
+        {{ date | date: "EEEE, dd.MM.yyyy" }}
       </option>
     </select>
 
@@ -14,9 +18,11 @@
     <p class="step-instruction">Odaberite termin</p>
     <div class="time-grid">
       <button
-        *ngFor="let time of times"
-        (click)="selectTime(time)"
+        *ngFor="let time of allTimes"
+        (click)="!isTimeBooked(time) && selectTime(time)"
+        [disabled]="isTimeBooked(time)"
         [class.active]="selectedTime === time"
+        [class.booked]="isTimeBooked(time)"
       >
         {{ time }}
       </button>
@@ -24,15 +30,15 @@
 
     <!-- USLUGE -->
     <div class="services-box">
-      <p class="services-title">Šta planiraš? <span>(opciono)</span></p>
+      <p class="services-title">Koje usluge zelis? <span>(opciono)</span></p>
       <div class="checkboxes">
         <label *ngFor="let service of services">
           <input
             type="checkbox"
-            [checked]="selectedServices.includes(service)"
+            [checked]="service.selected"
             (change)="toggleService(service)"
           />
-          <span>{{ service }}</span>
+          <span>{{ service.label }}</span>
         </label>
       </div>
     </div>
