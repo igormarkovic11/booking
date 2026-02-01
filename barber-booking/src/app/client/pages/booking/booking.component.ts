@@ -50,6 +50,7 @@ export class BookingComponent implements OnInit {
   /* ---------- PODACI KORISNIKA ---------- */
   name = '';
   phone = '';
+  email = '';
 
   /* ---------- UI STATE ---------- */
   loading = false;
@@ -127,6 +128,11 @@ export class BookingComponent implements OnInit {
       return;
     }
 
+    if (!this.email.trim() || !this.isValidEmail(this.email)) {
+      this.errorMessage = 'Unesi validan email';
+      return;
+    }
+
     this.loading = true;
 
     try {
@@ -147,9 +153,11 @@ export class BookingComponent implements OnInit {
         services: this.getSelectedServices(),
         name: this.name,
         phone: this.phone,
+        email: this.email,
       });
 
-      this.successMessage = 'Termin uspješno zakazan ✅';
+      this.successMessage =
+        'Rezervacija je poslana. Proveri svoj email i potvrdi rezervaciju.';
       this.resetForm();
     } catch (error) {
       this.errorMessage = 'Došlo je do greške, pokušaj ponovo';
@@ -164,6 +172,11 @@ export class BookingComponent implements OnInit {
     this.selectedTime = null;
     this.name = '';
     this.phone = '';
+    this.email = '';
     this.services.forEach((s) => (s.selected = false));
+  }
+
+  isValidEmail(email: string): boolean {
+    return /\S+@\S+\.\S+/.test(email);
   }
 }

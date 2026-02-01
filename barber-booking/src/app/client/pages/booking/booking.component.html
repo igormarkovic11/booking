@@ -56,11 +56,19 @@
       [(ngModel)]="phone"
       class="custom-input"
     />
+    <input
+      type="email"
+      placeholder="Email"
+      [(ngModel)]="email"
+      class="custom-input"
+    />
 
     <button
       class="full-width submit-btn"
       (click)="submitBooking()"
-      [disabled]="!selectedTime || !name || !phone"
+      [disabled]="
+        !selectedTime || !name || !phone || !email || !isValidEmail(email)
+      "
     >
       Završi
     </button>
