@@ -1,12 +1,12 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: 'AIzaSyBtWlzHXi7SNN2jnaWMAwba7lHLLPkHdNY',
-    authDomain: 'barbershop-83659.firebaseapp.com',
-    projectId: 'barbershop-83659',
-    storageBucket: 'barbershop-83659.firebasestorage.app',
-    messagingSenderId: '751360542093',
-    appId: '1:751360542093:web:10708e6fc090d4410ae9c4',
-    measurementId: 'G-5PRTLED3MP',
+    apiKey: 'AIzaSyBmyLaMkjCZkzu3mo2db08mwezgx_KxTB0',
+    authDomain: 'barber-booking-ac8fc.firebaseapp.com',
+    projectId: 'barber-booking-ac8fc',
+    storageBucket: 'barber-booking-ac8fc.firebasestorage.app',
+    messagingSenderId: '281127131930',
+    appId: '1:281127131930:web:eb5a9dfee5c8712532aaa3',
+    measurementId: 'G-XSD8CDL4CX',
   },
 };

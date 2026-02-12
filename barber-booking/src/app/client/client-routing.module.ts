@@ -5,6 +5,7 @@ import { ContactComponent } from './pages/contact/contact.component';
 import { AboutComponent } from './pages/about/about.component';
 import { FavorsComponent } from './pages/favors/favors.component';
 import { BookingComponent } from './pages/booking/booking.component';
+import { ConfirmComponent } from './pages/confirm/confirm.component';
 //import { SelectOptionsComponent } from './pages/select-options/select-options.component';
 
 const routes: Routes = [
@@ -13,6 +14,7 @@ const routes: Routes = [
   { path: 'about', component: AboutComponent },
   { path: 'favor', component: FavorsComponent },
   { path: 'booking', component: BookingComponent },
+  { path: 'confirm', component: ConfirmComponent },
   //{ path: 'select-options', component: SelectOptionsComponent },
 ];
 

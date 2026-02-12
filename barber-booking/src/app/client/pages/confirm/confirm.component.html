@@ -1,0 +1,25 @@
+<div class="confirm-page">
+  <div *ngIf="status === 'loading'">
+    <h2>Provjeravamo potvrdu...</h2>
+  </div>
+
+  <div *ngIf="status === 'success'">
+    <h2>✅ Termin je potvrđen!</h2>
+  </div>
+
+  <div *ngIf="status === 'expired'">
+    <h2>⏳ Link je istekao (15 min).</h2>
+  </div>
+
+  <div *ngIf="status === 'already'">
+    <h2>ℹ️ Termin je već potvrđen.</h2>
+  </div>
+
+  <div *ngIf="status === 'invalid'">
+    <h2>❌ Nevažeći link.</h2>
+  </div>
+
+  <div *ngIf="status === 'not_found'">
+    <h2>❌ Rezervacija nije pronađena.</h2>
+  </div>
+</div>
