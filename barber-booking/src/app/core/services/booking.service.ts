@@ -74,10 +74,12 @@ export class BookingService {
   }) {
     const token = this.generateToken();
     const createdAt = new Date();
-
-    // 1. Kreiramo referencu unaprijed da bismo dobili ID
     const newDocRef = doc(collection(this.firestore, 'bookings'));
-    const bookingId = newDocRef.id; // Ovo je npr. "Jsh82kL..."
+    const bookingId = newDocRef.id;
+
+    // Formatiranje datuma za email (npr. 2024-05-20 -> 20.05.2024)
+    const formattedDate = booking.date.split('-').reverse().join('.');
+    const vocativeName = this.toVocative(booking.name);
 
     const payload: any = {
       ...booking,
@@ -86,22 +88,37 @@ export class BookingService {
       createdAt,
       to: [booking.email],
       message: {
-        subject: 'Potvrda termina',
+        subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
         html: `
-        <p>Zdravo ${booking.name},</p>
-        <p>Klikni ispod da potvrdiš termin:</p>
-        <a href="http://localhost:4200/confirm?bookingId=${bookingId}&token=${token}">
-          Potvrdi termin
-        </a>
-        <p>Link važi 15 minuta.</p>
+        <div style="background-color: #121212; padding: 40px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff; text-align: center;">
+          <div style="max-width: 500px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            
+            <h1 style="color: #1976d2; margin-bottom: 10px;">Pozdrav, ${vocativeName}!</h1>
+            <p style="font-size: 16px; opacity: 0.9;">Hvala vam što ste odabrali naše usluge. Vaš termin je skoro spreman.</p>
+            
+            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left;">
+              <p style="margin: 5px 0;"><strong>📅 Datum:</strong> ${formattedDate}</p>
+              <p style="margin: 5px 0;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
+              <p style="margin: 5px 0;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
+            </div>
+
+            <p style="font-size: 14px; margin-bottom: 25px; color: #bbbbbb;">Molimo vas da potvrdite dolazak klikom na dugme ispod. Link je validan 15 minuta.</p>
+            
+            <a href="http://localhost:4200/confirm?bookingId=${bookingId}&token=${token}" 
+               style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);">
+               POTVRDI TERMIN
+            </a>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: #777777;">
+              Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
+            </div>
+          </div>
+        </div>
       `,
       },
     };
 
-    // 2. Spasavamo sve odjednom.
-    // Trigger Email ekstenzija će sada odmah pročitati ispravan link.
     await setDoc(newDocRef, payload);
-
     return newDocRef;
   }
 
@@ -141,5 +158,40 @@ export class BookingService {
     return (
       Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
     );
+  }
+
+  private toVocative(name: string): string {
+    if (!name) return '';
+
+    // Sklanjamo višak razmaka i uzimamo samo prvo ime ako ih je više
+    const firstName = name.trim().split(' ')[0];
+    const lastChar = firstName.slice(-1).toLowerCase();
+    const secondToLastChar = firstName.slice(-2, -1).toLowerCase();
+
+    // 1. Ženska imena na -a (Marija -> Marija, Ivana -> Ivana)
+    // Većina ostaje ista, pa ne mijenjamo ništa.
+
+    // 2. Muška imena na suglasnik (Igor -> Igore, Ivan -> Ivane)
+    const consonants = 'bcćčdgđjklljmnnjprstvzž';
+    if (consonants.includes(lastChar)) {
+      // Specifičnost: imena na -k, -g, -h često idu u -u (npr. Oleg -> Olegu, ali može i Oleže)
+      // Za Barbershop je najsigurnije dodati -e
+      if (lastChar === 'k' || lastChar === 'g') {
+        return firstName + 'u'; // npr. Erik -> Eriku
+      }
+      return firstName + 'e';
+    }
+
+    // 3. Imena na -o ili -e (Marko, Hrvoje) - ostaju ista u vokativu
+    if (lastChar === 'o' || lastChar === 'e') {
+      return firstName;
+    }
+
+    // 4. Specifična imena na -ica (npr. Ivica -> Ivice)
+    if (firstName.toLowerCase().endsWith('ica')) {
+      return firstName.slice(0, -1) + 'e';
+    }
+
+    return firstName; // Default: vrati kako jeste
   }
 }
