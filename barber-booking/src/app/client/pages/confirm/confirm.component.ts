@@ -8,6 +8,7 @@ import { BookingService } from '../../../core/services/booking.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './confirm.component.html',
+  styleUrls: ['./confirm.component.scss'],
 })
 export class ConfirmComponent implements OnInit {
   status:
@@ -50,5 +51,9 @@ export class ConfirmComponent implements OnInit {
       default:
         this.status = 'invalid';
     }
+  }
+
+  navigateToHome() {
+    window.location.href = '/';
   }
 }

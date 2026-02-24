@@ -1,25 +1,45 @@
 <div class="confirm-page">
-  <div *ngIf="status === 'loading'">
-    <h2>Provjeravamo potvrdu...</h2>
-  </div>
+  <div class="confirm-card">
+    <div *ngIf="status === 'loading'" class="status-box">
+      <div class="spinner"></div>
+      <h2>Provjeravamo potvrdu...</h2>
+    </div>
 
-  <div *ngIf="status === 'success'">
-    <h2>✅ Termin je potvrđen!</h2>
-  </div>
+    <div *ngIf="status === 'success'" class="status-box">
+      <div class="icon success">✅</div>
+      <h2>Termin je potvrđen!</h2>
+      <p>Vidimo se u zakazanom terminu.</p>
+      <button class="home-btn" (click)="navigateToHome()">
+        Vrati se na početnu
+      </button>
+    </div>
 
-  <div *ngIf="status === 'expired'">
-    <h2>⏳ Link je istekao (15 min).</h2>
-  </div>
+    <div *ngIf="status === 'expired'" class="status-box">
+      <div class="icon warning">⏳</div>
+      <h2>Link je istekao</h2>
+      <p>Rok za potvrdu je 15 minuta. Molimo pokušajte ponovo.</p>
+      <button class="home-btn" (click)="navigateToHome()">
+        Nova rezervacija
+      </button>
+    </div>
 
-  <div *ngIf="status === 'already'">
-    <h2>ℹ️ Termin je već potvrđen.</h2>
-  </div>
+    <div *ngIf="status === 'already'" class="status-box">
+      <div class="icon info">ℹ️</div>
+      <h2>Već potvrđeno</h2>
+      <p>Vaš termin je već ranije uspješno potvrđen.</p>
+      <button class="home-btn" (click)="navigateToHome()">Početna</button>
+    </div>
 
-  <div *ngIf="status === 'invalid'">
-    <h2>❌ Nevažeći link.</h2>
-  </div>
-
-  <div *ngIf="status === 'not_found'">
-    <h2>❌ Rezervacija nije pronađena.</h2>
+    <div
+      *ngIf="status === 'invalid' || status === 'not_found'"
+      class="status-box"
+    >
+      <div class="icon error">❌</div>
+      <h2>Greška</h2>
+      <p>Rezervacija nije pronađena ili je link nevažeći.</p>
+      <button class="home-btn" (click)="navigateToHome()">
+        Vrati se nazad
+      </button>
+    </div>
   </div>
 </div>
