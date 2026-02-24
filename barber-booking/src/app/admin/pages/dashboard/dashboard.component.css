@@ -17,25 +17,58 @@
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
 }
 
-/* PIN CARD */
-.auth-card {
-  text-align: center;
-  height: fit-content;
-  margin-top: 50px;
-  .pin-input {
-    width: 100%;
-    padding: 12px;
-    margin: 20px 0;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-    color: white;
-    text-align: center;
-    font-size: 1.5rem;
-    letter-spacing: 8px;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Tamnija pozadina za bolji fokus */
+  backdrop-filter: blur(8px); /* Efekat zamućenja pozadine */
+  display: flex;
+  align-items: center; /* Vertikalno centriranje */
+  justify-content: center; /* Horizontalno centriranje */
+  z-index: 9999; /* Da bude iznad svega, čak i navigacije */
+  padding: 20px;
+}
+
+/* Sam prozor modala */
+.modal-content {
+  background: #1e1e1e; /* Prilagodi svojoj tamnoj temi */
+  padding: 30px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  max-width: 400px; /* Da ne bude preširok na desktopu */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: modalAppear 0.3s ease-out;
+}
+
+/* Animacija da modal "iskoči" */
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
+/* Stilovi za input unutar modala da ne bude zbijeno */
+.pin-input {
+  width: 100%;
+  padding: 12px;
+  margin: 15px 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: white;
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 8px;
+}
 /* HEADER */
 .admin-header {
   margin-bottom: 24px;

@@ -3,7 +3,7 @@
     <div class="admin-header">
       <div class="title-section">
         <h2>Pregled termina</h2>
-        <button class="add-btn" (click)="quickAdd()">+ Novo</button>
+        <!-- <button class="add-btn" (click)="quickAdd()">+ Novo</button> -->
       </div>
 
       <div class="date-navigator">
@@ -44,13 +44,52 @@
   </div>
 </div>
 
+<div class="modal-overlay" *ngIf="showPinModal">
+  <div class="admin-card modal-content pin-modal">
+    <h3>Autorizacija</h3>
+    <p>Unesite PIN za nastavak</p>
+    <input
+      type="password"
+      [(ngModel)]="tempPin"
+      class="pin-input"
+      maxlength="4"
+      (keyup.enter)="confirmActionWithPin()"
+      placeholder="****"
+    />
+    <div class="modal-actions">
+      <button class="action-btn" (click)="closePinModal()">Odustani</button>
+      <button class="add-btn" (click)="confirmActionWithPin()">Potvrdi</button>
+    </div>
+  </div>
+</div>
+
+<!-- <div class="modal-overlay" *ngIf="showModal">
+  <div class="admin-card modal-content">
+    <h3>Brzo zakazivanje</h3>
+    <div class="form-group">
+      <label>Ime i prezime</label>
+      <input type="text" [(ngModel)]="newBooking.name" class="admin-input">
+      
+      <label>Vrijeme</label>
+      <select [(ngModel)]="newBooking.time" class="admin-input">
+        <option *ngFor="let t of availableTimes" [value]="t">{{t}}</option>
+      </select>
+
+      </div>
+    <div class="modal-actions">
+      <button class="action-btn" (click)="showModal = false">Zatvori</button>
+      <button class="add-btn" (click)="saveQuickBooking()">Spremi</button>
+    </div>
+  </div>
+</div> -->
+
 <div
   class="toast"
   [class.show]="notification.show"
   [class.error]="notification.type === 'error'"
 >
-  <span class="toast-icon">{{
-    notification.type === "success" ? "✅" : "❌"
-  }}</span>
+  <span class="toast-icon">
+    {{ notification.type === "success" ? "✅" : "❌" }}
+  </span>
   <span class="toast-msg">{{ notification.message }}</span>
 </div>

@@ -11,6 +11,7 @@ import {
   deleteDoc,
   setDoc,
   Query,
+  getDoc,
 } from '@angular/fire/firestore';
 
 @Injectable({
@@ -55,5 +56,16 @@ export class AdminService {
     };
     await setDoc(newDocRef, payload);
     return newDocRef.id;
+  }
+
+  async verifyPin(enteredPin: string): Promise<boolean> {
+    const docRef = doc(this.firestore, 'internal', 'config');
+    const snap = await getDoc(docRef);
+
+    if (snap.exists()) {
+      const data = snap.data();
+      return data['adminPin'] === enteredPin;
+    }
+    return false;
   }
 }

@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Dodaj DatePipe
 import { BookingService } from '../../../core/services/booking.service';
 import { AdminService } from '../../../core/services/admin.service';
+import { environment } from '../../../environments/environment';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule], // CommonModule sadrži NgIf, NgFor i DatePipe
+  imports: [CommonModule, FormsModule], // CommonModule sadrži NgIf, NgFor i DatePipe
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
@@ -14,7 +16,9 @@ export class DashboardComponent implements OnInit {
   bookings: any[] = [];
   selectedDay: string = new Date().toISOString().split('T')[0];
   loading = false;
-  readonly SECRET_PIN = '2024';
+  showPinModal = false;
+  tempPin = '';
+  pendingAction: (() => void) | null = null; // Ovde čuvamo šta je frizer hteo da uradi
 
   constructor(
     private bookingService: BookingService,
@@ -47,28 +51,51 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  private checkAccess(): boolean {
-    const pin = prompt('Unesite PIN za autorizaciju akcije:');
-    if (pin === this.SECRET_PIN) return true;
-    alert('Pogrešan PIN!');
-    return false;
+  // Umesto checkAccess(), sada koristimo ovo:
+  runWithPin(action: () => void) {
+    this.pendingAction = action;
+    this.showPinModal = true;
+  }
+
+  async confirmActionWithPin() {
+    this.loading = true; // Pokaži neki loader
+
+    // Pitamo bazu, a ne naš kod!
+    const isValid = await this.adminService.verifyPin(this.tempPin);
+
+    if (isValid) {
+      if (this.pendingAction) this.pendingAction();
+      this.closePinModal();
+      this.showToast('Autorizacija uspešna');
+    } else {
+      this.showToast('Pogrešan PIN!', 'error');
+      this.tempPin = '';
+    }
+    this.loading = false;
+  }
+
+  closePinModal() {
+    this.showPinModal = false;
+    this.tempPin = '';
+    this.pendingAction = null;
   }
 
   async cancelBooking(id: string) {
-    if (this.checkAccess()) {
-      if (confirm('Da li ste sigurni da želite da obrišete ovu rezervaciju?')) {
-        await this.adminService.deleteBooking(id); // Koristimo adminService
+    this.runWithPin(async () => {
+      if (confirm('Obrisati termin?')) {
+        await this.adminService.deleteBooking(id);
         this.bookings = this.bookings.filter((b) => b.id !== id);
+        this.showToast('Termin obrisan');
       }
-    }
+    });
   }
 
-  async quickAdd() {
-    if (this.checkAccess()) {
-      alert('Otvaram formu za ručno dodavanje...');
-      // Ovdje ćemo u sljedećem koraku implementirati modal
-    }
-  }
+  // async quickAdd() {
+  //   if (this.checkAccess()) {
+  //     alert('Otvaram formu za ručno dodavanje...');
+  //     // Ovdje ćemo u sljedećem koraku implementirati modal
+  //   }
+  // }
 
   notification = {
     show: false,
