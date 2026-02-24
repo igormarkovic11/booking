@@ -28,6 +28,18 @@
   animation: fadeIn 0.8s ease-out;
 }
 
+.hero-logo {
+  width: 180px; /* Veći na mobilnom (prije je bio 120px) */
+  height: auto;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+  transition: transform 0.3s ease; /* Lagano pulsiranje na hover */
+
+  &:hover {
+    transform: scale(1.05); /* Suptilna interakcija kad se pređe mišem */
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -42,7 +54,9 @@
 .cta-button {
   padding: 10px 24px;
   font-size: 1rem;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .cta-button:hover {
@@ -64,5 +78,9 @@
   .cta-button {
     padding: 12px 28px;
     font-size: 1.1rem;
+  }
+  .hero-logo {
+    width: 280px; /* Ozbiljno velik logo za desktop (prije je bio 180px) */
+    margin-bottom: 40px;
   }
 }

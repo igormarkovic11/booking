@@ -84,8 +84,22 @@
 }
 
 .logo-link {
+  display: flex;
+  align-items: center; /* Centriranje loga i teksta vertikalno */
   text-decoration: none;
-  color: inherit; /* da zadrži bijelu boju */
+  color: inherit;
+  gap: 10px; /* Razmak između slike loga i teksta "Barber Shop" */
+}
+
+.nav-logo {
+  height: 35px; /* Dovoljno malo da stane u toolbar od 56px */
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.2s ease;
+}
+
+.logo-link:hover .nav-logo {
+  transform: scale(1.1); /* Suptilni efekat na hover cijelog linka */
 }
 
 .spacer {
@@ -122,5 +136,11 @@
 
   .menu-btn {
     display: block;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo {
+    display: none; /* Sakrij tekst na baš malim ekranima, ostavi samo logo */
   }
 }
