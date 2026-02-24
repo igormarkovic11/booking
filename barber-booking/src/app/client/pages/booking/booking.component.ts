@@ -138,9 +138,8 @@ export class BookingComponent implements OnInit {
     try {
       const isAvailable = await this.bookingService.isSlotAvailable(
         this.selectedDate,
-        this.selectedTime,
+        this.selectedTime!,
       );
-
       if (!isAvailable) {
         this.errorMessage = 'Termin je upravo zauzet 😕';
         this.loading = false;
@@ -149,21 +148,26 @@ export class BookingComponent implements OnInit {
 
       await this.bookingService.createBooking({
         date: this.selectedDate,
-        time: this.selectedTime,
+        time: this.selectedTime!,
         services: this.getSelectedServices(),
         name: this.name,
         phone: this.phone,
         email: this.email,
       });
 
+      // Postavljamo poruku koja će aktivirati success ekran
       this.successMessage =
-        'Rezervacija je poslana. Proveri svoj email i potvrdi rezervaciju.';
-      this.resetForm();
-    } catch (error) {
-      this.errorMessage = 'Došlo je do greške, pokušaj ponovo';
-    }
+        'Poslali smo ti link za potvrdu na ' +
+        this.email +
+        '. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.';
 
-    this.loading = false;
+      this.resetForm(); // Čistimo polja za sledeći put
+    } catch (error) {
+      this.errorMessage =
+        'Došlo je do greške prilikom čuvanja. Pokušajte ponovo.';
+    } finally {
+      this.loading = false;
+    }
     await this.loadBookedTimes();
   }
 

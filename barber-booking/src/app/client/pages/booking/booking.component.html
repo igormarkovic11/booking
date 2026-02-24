@@ -44,33 +44,55 @@
     </div>
 
     <!-- PODACI -->
-    <input
-      type="text"
-      placeholder="Ime"
-      [(ngModel)]="name"
-      class="custom-input"
-    />
-    <input
-      type="text"
-      placeholder="Telefon"
-      [(ngModel)]="phone"
-      class="custom-input"
-    />
-    <input
-      type="email"
-      placeholder="Email"
-      [(ngModel)]="email"
-      class="custom-input"
-    />
+    <div *ngIf="successMessage" class="success-container">
+      <div class="success-icon">✉️</div>
+      <h2>Proveri svoj email</h2>
+      <p class="success-text">{{ successMessage }}</p>
+      <button class="submit-btn" (click)="successMessage = ''">Zatvori</button>
+    </div>
 
-    <button
-      class="full-width submit-btn"
-      (click)="submitBooking()"
-      [disabled]="
-        !selectedTime || !name || !phone || !email || !isValidEmail(email)
-      "
-    >
-      Završi
-    </button>
+    <div *ngIf="!successMessage">
+      <h2>Zakaži termin</h2>
+
+      <input
+        type="text"
+        placeholder="Ime"
+        [(ngModel)]="name"
+        class="custom-input"
+        [disabled]="loading"
+      />
+      <input
+        type="text"
+        placeholder="Telefon"
+        [(ngModel)]="phone"
+        class="custom-input"
+        [disabled]="loading"
+      />
+      <input
+        type="text"
+        placeholder="Email"
+        [(ngModel)]="email"
+        class="custom-input"
+        [disabled]="loading"
+      />
+
+      <p *ngIf="errorMessage" class="error-text">{{ errorMessage }}</p>
+
+      <button
+        class="full-width submit-btn"
+        (click)="submitBooking()"
+        [disabled]="
+          loading ||
+          !selectedTime ||
+          !name ||
+          !phone ||
+          !email ||
+          !isValidEmail(email)
+        "
+      >
+        <span *ngIf="!loading">Završi</span>
+        <span *ngIf="loading">Slanje...</span>
+      </button>
+    </div>
   </div>
 </div>
