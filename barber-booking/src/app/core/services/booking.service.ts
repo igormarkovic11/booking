@@ -11,6 +11,7 @@ import {
   getDoc,
   CollectionReference,
   DocumentData,
+  setDoc,
 } from '@angular/fire/firestore';
 
 @Injectable({
@@ -62,7 +63,7 @@ export class BookingService {
     return snapshot.empty;
   }
 
-  /* ---------- KREIRAJ REZERVACIJU ---------- */
+  /* ---------- KREIRAJ REZERVACIJU (Popravljeno) ---------- */
   async createBooking(booking: {
     date: string;
     time: string;
@@ -74,35 +75,34 @@ export class BookingService {
     const token = this.generateToken();
     const createdAt = new Date();
 
+    // 1. Kreiramo referencu unaprijed da bismo dobili ID
+    const newDocRef = doc(collection(this.firestore, 'bookings'));
+    const bookingId = newDocRef.id; // Ovo je npr. "Jsh82kL..."
+
     const payload: any = {
       ...booking,
       status: 'pending',
       confirmationToken: token,
       createdAt,
-
-      // 🔥 Ovo koristi Email Extension
       to: [booking.email],
       message: {
         subject: 'Potvrda termina',
         html: `
-          <p>Zdravo ${booking.name},</p>
-          <p>Klikni ispod da potvrdiš termin:</p>
-          <a href="http://localhost:4200/confirm?bookingId=DOC_ID&token=${token}">
-            Potvrdi termin
-          </a>
-          <p>Link važi 15 minuta.</p>
-        `,
+        <p>Zdravo ${booking.name},</p>
+        <p>Klikni ispod da potvrdiš termin:</p>
+        <a href="http://localhost:4200/confirm?bookingId=${bookingId}&token=${token}">
+          Potvrdi termin
+        </a>
+        <p>Link važi 15 minuta.</p>
+      `,
       },
     };
 
-    const docRef = await addDoc(this.bookingsRef, payload);
+    // 2. Spasavamo sve odjednom.
+    // Trigger Email ekstenzija će sada odmah pročitati ispravan link.
+    await setDoc(newDocRef, payload);
 
-    // zamjena DOC_ID
-    await updateDoc(docRef, {
-      'message.html': payload.message.html.replace('DOC_ID', docRef.id),
-    });
-
-    return docRef;
+    return newDocRef;
   }
 
   /* ---------- POTVRDA TERMINA ---------- */
