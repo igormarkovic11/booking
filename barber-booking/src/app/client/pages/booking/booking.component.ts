@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookingService } from '../../../core/services/booking.service';
@@ -10,7 +10,7 @@ import { BookingService } from '../../../core/services/booking.service';
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.scss'],
 })
-export class BookingComponent implements OnInit {
+export class BookingComponent implements OnInit, OnDestroy {
   /* ---------- DATUMI ---------- */
   availableDates: string[] = [];
   selectedDate!: string;
@@ -56,6 +56,7 @@ export class BookingComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  private refreshInterval: any;
 
   constructor(private bookingService: BookingService) {}
 
@@ -64,6 +65,18 @@ export class BookingComponent implements OnInit {
     this.generateDates();
     this.selectedDate = this.availableDates[0]; // default = danas
     this.loadBookedTimes();
+    this.bookingService.cleanupOldBookings(); // Čistimo stare rezervacije pri pokretanju aplikacije
+
+    this.refreshInterval = setInterval(() => {
+      this.loadBookedTimes();
+    }, 30000);
+  }
+
+  ngOnDestroy(): void {
+    // Važno: Ugasi interval kada korisnik napusti stranicu
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   /* ---------- GENERIŠI DANAS + NAREDNA 2 ---------- */
@@ -133,6 +146,12 @@ export class BookingComponent implements OnInit {
       return;
     }
 
+    const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
+    if (this.phone.trim().length < 9 || !phoneRegex.test(this.phone)) {
+      this.errorMessage = 'Unesite ispravan broj telefona (min. 9 cifara)';
+      return;
+    }
+
     this.loading = true;
 
     try {
@@ -182,5 +201,33 @@ export class BookingComponent implements OnInit {
 
   isValidEmail(email: string): boolean {
     return /\S+@\S+\.\S+/.test(email);
+  }
+
+  get filteredTimes(): string[] {
+    const now = new Date();
+    const selectedDateObj = new Date(this.selectedDate);
+    const today = new Date();
+
+    // Resetujemo sate na 0 da uporedimo samo datume
+    today.setHours(0, 0, 0, 0);
+    selectedDateObj.setHours(0, 0, 0, 0);
+
+    // Ako izabrani datum nije danas (već sutra/prekosutra), prikaži sve termine
+    if (selectedDateObj.getTime() !== today.getTime()) {
+      return this.allTimes;
+    }
+
+    // Ako je danas, filtriraj one koji su prošli
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    return this.allTimes.filter((time) => {
+      const [hour, minute] = time.split(':').map(Number);
+      // Prikazujemo termine koji su barem 15 minuta ispred trenutnog vremena
+      // (Dajemo korisniku malo vremena da popuni formu)
+      if (hour > currentHour) return true;
+      if (hour === currentHour && minute > currentMinute + 15) return true;
+      return false;
+    });
   }
 }

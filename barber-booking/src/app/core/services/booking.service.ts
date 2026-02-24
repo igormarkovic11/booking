@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import {
   Firestore,
   collection,
@@ -12,6 +12,7 @@ import {
   CollectionReference,
   DocumentData,
   setDoc,
+  deleteDoc,
 } from '@angular/fire/firestore';
 
 @Injectable({
@@ -76,16 +77,19 @@ export class BookingService {
     const createdAt = new Date();
     const newDocRef = doc(collection(this.firestore, 'bookings'));
     const bookingId = newDocRef.id;
+    const expireAt = new Date(createdAt.getTime() + 20 * 60000);
 
     // Formatiranje datuma za email (npr. 2024-05-20 -> 20.05.2024)
     const formattedDate = booking.date.split('-').reverse().join('.');
-    const vocativeName = this.toVocative(booking.name);
+    const capitalizedName = this.capitalize(booking.name);
+    const vocativeName = this.toVocative(capitalizedName);
 
     const payload: any = {
       ...booking,
       status: 'pending',
       confirmationToken: token,
       createdAt,
+      expireAt,
       to: [booking.email],
       message: {
         subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
@@ -150,7 +154,10 @@ export class BookingService {
       return 'expired';
     }
 
-    await updateDoc(bookingRef, { status: 'confirmed' });
+    await updateDoc(bookingRef, {
+      status: 'confirmed',
+      expireAt: null, // Trajno ostaje u bazi (dok ga ne obrišemo kao starog)
+    });
     return 'success';
   }
 
@@ -193,5 +200,26 @@ export class BookingService {
     }
 
     return firstName; // Default: vrati kako jeste
+  }
+
+  async cleanupOldBookings() {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Uzmi sve termine koji su za datum manji od danas
+    const q = query(this.bookingsRef, where('date', '<', today));
+    const snapshot = await getDocs(q);
+
+    const batch = snapshot.docs.map((d) => deleteDoc(d.ref));
+    await Promise.all(batch);
+    console.log(`Očišćeno ${snapshot.size} starih termina.`);
+  }
+
+  private capitalize(name: string): string {
+    if (!name) return '';
+    return name
+      .trim()
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 }

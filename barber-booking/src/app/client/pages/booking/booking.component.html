@@ -18,7 +18,7 @@
     <p class="step-instruction">Odaberite termin</p>
     <div class="time-grid">
       <button
-        *ngFor="let time of allTimes"
+        *ngFor="let time of filteredTimes"
         (click)="!isTimeBooked(time) && selectTime(time)"
         [disabled]="isTimeBooked(time)"
         [class.active]="selectedTime === time"
@@ -27,7 +27,6 @@
         {{ time }}
       </button>
     </div>
-
     <!-- USLUGE -->
     <div class="services-box">
       <p class="services-title">Koje usluge zelis? <span>(opciono)</span></p>
