@@ -1,0 +1,56 @@
+<div class="admin-page">
+  <div class="admin-card main-panel">
+    <div class="admin-header">
+      <div class="title-section">
+        <h2>Pregled termina</h2>
+        <button class="add-btn" (click)="quickAdd()">+ Novo</button>
+      </div>
+
+      <div class="date-navigator">
+        <button (click)="changeDate(-1)">◀</button>
+        <span class="date-display">{{ selectedDay | date: "dd.MM.yyyy" }}</span>
+        <button (click)="changeDate(1)">▶</button>
+      </div>
+    </div>
+
+    <div class="bookings-list">
+      <div *ngIf="loading" class="loader">Učitavanje...</div>
+
+      <div class="no-data" *ngIf="!loading && bookings.length === 0">
+        Nema rezervacija za ovaj dan.
+      </div>
+
+      <div class="booking-row" *ngFor="let b of bookings">
+        <div class="time-box">{{ b.time }}</div>
+        <div class="info-box">
+          <span class="client-name">{{ b.name }}</span>
+          <span class="client-services">{{ b.services.join(", ") }}</span>
+        </div>
+        <div class="actions-box">
+          <a
+            [href]="'tel:' + b.phone"
+            class="action-btn call"
+            (click)="copyToClipboard(b.phone)"
+            title="Klikni da pozoveš i kopiraš broj"
+          >
+            📞
+          </a>
+          <button (click)="cancelBooking(b.id)" class="action-btn delete">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="toast"
+  [class.show]="notification.show"
+  [class.error]="notification.type === 'error'"
+>
+  <span class="toast-icon">{{
+    notification.type === "success" ? "✅" : "❌"
+  }}</span>
+  <span class="toast-msg">{{ notification.message }}</span>
+</div>
