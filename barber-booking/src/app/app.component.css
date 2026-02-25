@@ -1,23 +1,41 @@
+/* Glavni kontejner samo drži strukturu, nema sliku */
 .app-background {
+  position: relative;
   min-height: 100dvh;
-  background-image: url("/assets/images/background.jpg"); /* HERO / background */
-  background-size: cover;
-  background-position: center; /* desktop centrirano */
-  background-attachment: fixed;
-  color: white;
   display: flex;
   flex-direction: column;
+  z-index: 1;
 }
 
+/* OVO JE KLJUČ: Fiksni sloj za sliku */
 .app-background::before {
   content: "";
+  position: fixed; /* Fiksirano za ekran */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("/assets/images/background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -2; /* Ispod svega */
+}
+
+/* Sloj za tamni overlay (da se tekst bolje vidi) */
+.app-background::after {
+  content: "";
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55); /* tamni overlay */
-  z-index: -1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65); /* Malo jači overlay za bolji kontrast */
+  z-index: -1; /* Između slike i sadržaja */
 }
 
 .content {
   flex: 1;
-  padding-top: 56px; /* zbog fixed toolbar */
+  padding-top: 56px;
+  position: relative;
 }
