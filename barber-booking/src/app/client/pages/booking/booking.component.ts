@@ -14,6 +14,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   /* ---------- DATUMI ---------- */
   availableDates: string[] = [];
   selectedDate!: string;
+  private checkDayTimer: any;
+  private midnightCheck: any;
 
   /* ---------- TERMINI ---------- */
   allTimes: string[] = [
@@ -70,6 +72,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.refreshInterval = setInterval(() => {
       this.loadBookedTimes();
     }, 30000);
+
+    this.setupMidnightTimer();
   }
 
   ngOnDestroy(): void {
@@ -77,16 +81,34 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
+    if (this.checkDayTimer) clearInterval(this.checkDayTimer);
   }
 
   /* ---------- GENERIŠI DANAS + NAREDNA 2 ---------- */
   generateDates() {
-    const today = new Date();
+    this.availableDates = []; // Prvo ispraznimo listu da se ne bi duplirala pri osvežavanju
+    let date = new Date();
+    const targetCount = 3; // Želimo 3 radna dana u ponudi
 
-    for (let i = 0; i < 3; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      this.availableDates.push(date.toISOString().split('T')[0]);
+    while (this.availableDates.length < targetCount) {
+      const dayOfWeek = date.getDay(); // 0 = Nedelja, 1 = Ponedeljak
+
+      // Provera: Dodajemo u listu samo ako NIJE nedelja (0) i NIJE ponedeljak (1)
+      if (dayOfWeek !== 0 && dayOfWeek !== 1) {
+        this.availableDates.push(date.toISOString().split('T')[0]);
+      }
+
+      // Pomeri datum za jedan dan unapred za sledeću iteraciju
+      date.setDate(date.getDate() + 1);
+    }
+
+    // Automatski selektuj prvi radni dan ako ništa nije izabrano
+    if (
+      !this.selectedDate ||
+      !this.availableDates.includes(this.selectedDate)
+    ) {
+      this.selectedDate = this.availableDates[0];
+      this.onDateChange();
     }
   }
 
@@ -94,6 +116,17 @@ export class BookingComponent implements OnInit, OnDestroy {
   async onDateChange() {
     this.selectedTime = null;
     await this.loadBookedTimes();
+  }
+
+  setupMidnightTimer() {
+    this.midnightCheck = setInterval(() => {
+      const now = new Date();
+      // Ako je trenutno vreme tačno 00:00 (proveravamo jednom u minuti)
+      if (now.getHours() === 0 && now.getMinutes() === 0) {
+        console.log('Novi dan počeo, ažuriram termine...');
+        this.generateDates();
+      }
+    }, 60000); // 60.000 ms = 1 minut
   }
 
   /* ---------- UČITAJ ZAUZETE TERMINE ---------- */
