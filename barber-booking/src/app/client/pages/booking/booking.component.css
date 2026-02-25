@@ -65,21 +65,46 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   background: rgba(255, 255, 255, 0.05);
-  transition: all 0.2s ease;
-  cursor: pointer; /* dodaj ovo */
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease; /* Brža transformacija */
+  cursor: pointer;
+
+  /* DODATO: Sprečava sivi blic i poboljšava odziv na mobilnom */
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  user-select: none; /* Sprečava slučajno selektovanje teksta tokom klika */
+}
+
+/* IZMENJENO: Hover se aktivira SAMO na uređajima sa mišem (Desktop) */
+@media (hover: hover) {
+  .time-grid button:hover:not(.booked):not(.active) {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+  }
+}
+
+/* NOVO: Instant feedback čim prst dotakne ekran */
+.time-grid button:active {
+  background: rgba(25, 118, 210, 0.4);
+  transform: scale(0.96);
+}
+
+/* IZMENJENO: Aktivna klasa mora biti "najjača" */
+.time-grid button.active {
+  background: #1976d2 !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+  transform: scale(1) !important; /* Vraća na punu veličinu kad je izabrano */
 }
 
 .time-grid button.booked {
-  opacity: 0.4;
+  opacity: 0.3;
   pointer-events: none;
   text-decoration: line-through;
-}
-
-.time-grid button.active {
-  background: #1976d2;
-  color: white;
-  border: none;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* hover efekt */
