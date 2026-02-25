@@ -14,12 +14,6 @@
   justify-content: center;
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-}
-
 .hero-content {
   position: relative;
   z-index: 2;

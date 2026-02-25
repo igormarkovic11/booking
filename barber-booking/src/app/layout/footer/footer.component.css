@@ -2,8 +2,9 @@
 .footer {
   position: relative;
   padding: 32px 16px;
-  background: rgba(0, 0, 0, 0.55); /* tamni overlay */
+  background: rgba(0, 0, 0, 0.4); /* tamni overlay */
   text-align: center;
+  color: white;
 }
 
 .footer-content {
