@@ -4,6 +4,7 @@ import {
   DocumentData,
   Firestore,
   collection,
+  addDoc,
   query,
   where,
   getDocs,
@@ -59,13 +60,31 @@ export class AdminService {
   }
 
   async verifyPin(enteredPin: string): Promise<boolean> {
-    const docRef = doc(this.firestore, 'internal', 'config');
-    const snap = await getDoc(docRef);
+    try {
+      const docRef = doc(this.firestore, 'internal', 'config');
+      const docSnap = await getDoc(docRef);
 
-    if (snap.exists()) {
-      const data = snap.data();
-      return data['adminPin'] === enteredPin;
+      if (docSnap.exists()) {
+        return docSnap.data()['adminPin'] == enteredPin;
+      }
+      return false;
+    } catch (error) {
+      console.error('Greška pri proveri PIN-a:', error);
+      return false;
     }
-    return false;
+  }
+
+  async addBooking(bookingData: any) {
+    try {
+      const bookingsRef = collection(this.firestore, 'bookings');
+      // addDoc pravi novi dokument sa nasumičnim ID-em
+      return await addDoc(bookingsRef, {
+        ...bookingData,
+        createdAt: new Date(), // Dodajemo timestamp radi reda
+      });
+    } catch (error) {
+      console.error('Greška pri dodavanju rezervacije:', error);
+      throw error;
+    }
   }
 }

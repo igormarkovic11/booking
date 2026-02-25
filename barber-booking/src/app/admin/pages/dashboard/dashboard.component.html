@@ -3,7 +3,7 @@
     <div class="admin-header">
       <div class="title-section">
         <h2>Pregled termina</h2>
-        <!-- <button class="add-btn" (click)="quickAdd()">+ Novo</button> -->
+        <button class="add-btn" (click)="quickAdd()">+ Novo</button>
       </div>
 
       <div class="date-navigator">
@@ -35,7 +35,7 @@
           >
             📞
           </a>
-          <button (click)="cancelBooking(b.id)" class="action-btn delete">
+          <button (click)="confirmDelete(b.id)" class="action-btn delete">
             🗑️
           </button>
         </div>
@@ -63,25 +63,82 @@
   </div>
 </div>
 
-<!-- <div class="modal-overlay" *ngIf="showModal">
-  <div class="admin-card modal-content">
-    <h3>Brzo zakazivanje</h3>
-    <div class="form-group">
-      <label>Ime i prezime</label>
-      <input type="text" [(ngModel)]="newBooking.name" class="admin-input">
-      
-      <label>Vrijeme</label>
-      <select [(ngModel)]="newBooking.time" class="admin-input">
-        <option *ngFor="let t of availableTimes" [value]="t">{{t}}</option>
-      </select>
+<div class="modal-overlay" *ngIf="showDeleteModal">
+  <div class="admin-card modal-content delete-modal">
+    <div class="modal-icon">⚠️</div>
+    <h3>Brisanje termina</h3>
+    <p>
+      Jeste li sigurni da želite obrisati ovaj termin? Ova akcija se ne može
+      poništiti.
+    </p>
 
-      </div>
     <div class="modal-actions">
-      <button class="action-btn" (click)="showModal = false">Zatvori</button>
-      <button class="add-btn" (click)="saveQuickBooking()">Spremi</button>
+      <button class="action-btn cancel" (click)="closeDeleteModal()">
+        Odustani
+      </button>
+      <button class="action-btn delete-confirm" (click)="executeDelete()">
+        Obriši
+      </button>
     </div>
   </div>
-</div> -->
+</div>
+
+<div class="modal-overlay" *ngIf="showQuickAddModal">
+  <div class="admin-card modal-content quick-add-modal">
+    <h3>Novo zakazivanje</h3>
+
+    <div class="form-group">
+      <label class="input-label">Ime klijenta</label>
+      <input
+        type="text"
+        [(ngModel)]="newBooking.name"
+        placeholder="Unesite ime..."
+        class="admin-input-field"
+      />
+
+      <label class="input-label">Telefon (opciono)</label>
+      <input
+        type="tel"
+        [(ngModel)]="newBooking.phone"
+        placeholder="06x..."
+        class="admin-input-field"
+      />
+
+      <label class="input-label">Izaberi vrijeme</label>
+      <div class="time-grid">
+        <button
+          *ngFor="let t of filteredAvailableTimes"
+          [class.selected]="newBooking.time === t"
+          (click)="newBooking.time = t"
+          class="time-chip"
+        >
+          {{ t }}
+        </button>
+      </div>
+
+      <label class="input-label">Usluge</label>
+      <div class="service-chips">
+        <button
+          *ngFor="let s of allServices"
+          [class.active]="newBooking.services.includes(s)"
+          (click)="toggleService(s)"
+          class="service-chip"
+        >
+          {{ s }}
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="action-btn cancel" (click)="closeQuickAdd()">
+        Odustani
+      </button>
+      <button class="add-btn" (click)="saveQuickBooking()">
+        Kreiraj termin
+      </button>
+    </div>
+  </div>
+</div>
 
 <div
   class="toast"

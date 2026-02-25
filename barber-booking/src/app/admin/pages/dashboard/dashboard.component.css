@@ -133,6 +133,7 @@
 }
 
 .action-btn {
+  margin-right: 5px;
   background: rgba(255, 255, 255, 0.1);
   border: none;
   padding: 8px;
@@ -198,4 +199,132 @@
 .toast-msg {
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+.delete-modal {
+  text-align: center;
+  border-top: 4px solid #ff5252; /* Crvena linija na vrhu za upozorenje */
+}
+
+.modal-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.delete-modal h3 {
+  color: #ff5252;
+  margin-bottom: 15px;
+}
+
+.delete-modal p {
+  color: #ccc;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+/* Dugmad u modalu */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 5px;
+}
+
+.delete-confirm {
+  background: #ff5252 !important;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 25px;
+  border-radius: 12px;
+}
+
+/* Prilagođavanje za telefon */
+@media (max-width: 480px) {
+  .modal-actions {
+    flex-direction: column-reverse; /* Na mobitelu neka 'Odustani' bude ispod */
+  }
+  .action-btn {
+    width: 100%;
+  }
+}
+
+/* QUICK ADD SPECIFIČNI STILOVI */
+.quick-add-modal {
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  margin-top: 15px;
+}
+
+.admin-input-field {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: white;
+  outline: none;
+}
+
+.admin-input-field:focus {
+  border-color: #1976d2;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.time-chip,
+.service-chip {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s;
+}
+
+.time-chip.selected,
+.service-chip.active {
+  background: #1976d2;
+  border-color: #1976d2;
+  box-shadow: 0 0 15px rgba(25, 118, 210, 0.4);
+}
+
+.service-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Da scrollbar u modalu izgleda ljepše */
+.quick-add-modal::-webkit-scrollbar {
+  width: 4px;
+}
+.quick-add-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
