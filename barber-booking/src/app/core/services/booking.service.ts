@@ -108,7 +108,7 @@ export class BookingService {
 
             <p style="font-size: 14px; margin-bottom: 25px; color: #bbbbbb;">Molimo vas da potvrdite dolazak klikom na dugme ispod. Link je validan 15 minuta.</p>
             
-            <a href="http://localhost:4200/confirm?bookingId=${bookingId}&token=${token}" 
+            <a href="https://booking-ashen-nine.vercel.app/confirm?bookingId=${bookingId}&token=${token}" 
                style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);">
                POTVRDI TERMIN
             </a>
