@@ -1,5 +1,5 @@
 .app-background {
-  min-height: 100vh;
+  min-height: 100dvh;
   background-image: url("/assets/images/background.jpg"); /* HERO / background */
   background-size: cover;
   background-position: center; /* desktop centrirano */
