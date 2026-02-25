@@ -3,12 +3,14 @@
     <div class="admin-header">
       <div class="title-section">
         <h2>Pregled termina</h2>
-        <button class="add-btn" (click)="quickAdd()">+ Novo</button>
+        <button class="add-btn" (click)="quickAdd()">Novi termin</button>
       </div>
 
       <div class="date-navigator">
         <button (click)="changeDate(-1)">◀</button>
-        <span class="date-display">{{ selectedDay | date: "dd.MM.yyyy" }}</span>
+        <span class="date-display">{{
+          selectedDay | date: "dd.MM.yyyy."
+        }}</span>
         <button (click)="changeDate(1)">▶</button>
       </div>
     </div>
