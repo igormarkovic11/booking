@@ -1,4 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  HostListener,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookingService } from '../../../core/services/booking.service';
@@ -16,6 +22,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   selectedDate!: string;
   private checkDayTimer: any;
   private midnightCheck: any;
+  private lastCheckedDate: string = new Date().toDateString();
   today = new Date(); // Dodaj ovo u klasu komponente
 
   /* ---------- TERMINI ---------- */
@@ -61,7 +68,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   successMessage = '';
   private refreshInterval: any;
 
-  constructor(private bookingService: BookingService) {}
+  constructor(
+    private bookingService: BookingService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   /* ---------- INIT ---------- */
   ngOnInit(): void {
@@ -75,6 +85,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     }, 30000);
 
     this.setupMidnightTimer();
+    this.onWindowFocus(); // Proveri odmah pri učitavanju da li je dan promenjen (npr. ako je korisnik ostavio stranicu otvorenu preko ponoći)
   }
 
   ngOnDestroy(): void {
@@ -87,23 +98,27 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   /* ---------- GENERIŠI DANAS + NAREDNA 2 ---------- */
   generateDates() {
-    this.availableDates = []; // Prvo ispraznimo listu da se ne bi duplirala pri osvežavanju
-    let date = new Date();
-    const targetCount = 3; // Želimo 3 radna dana u ponudi
+    const newDates: string[] = [];
+    let tempDate = new Date();
+    const targetCount = 3;
 
-    while (this.availableDates.length < targetCount) {
-      const dayOfWeek = date.getDay(); // 0 = Nedelja, 1 = Ponedeljak
+    // Osiguravamo da radimo sa čistim datumom bez minuta/sekundi
+    tempDate.setHours(0, 0, 0, 0);
 
-      // Provera: Dodajemo u listu samo ako NIJE nedelja (0) i NIJE ponedeljak (1)
+    while (newDates.length < targetCount) {
+      const dayOfWeek = tempDate.getDay();
+
       if (dayOfWeek !== 0 && dayOfWeek !== 1) {
-        this.availableDates.push(date.toISOString().split('T')[0]);
+        // 'sv-SE' format daje tačno YYYY-MM-DD u lokalnom vremenu
+        const dateStr = tempDate.toLocaleDateString('sv-SE');
+        newDates.push(dateStr);
       }
-
-      // Pomeri datum za jedan dan unapred za sledeću iteraciju
-      date.setDate(date.getDate() + 1);
+      tempDate.setDate(tempDate.getDate() + 1);
     }
 
-    // Automatski selektuj prvi radni dan ako ništa nije izabrano
+    this.availableDates = [...newDates]; // Menjamo referencu niza
+
+    // Provera da li je stari selectedDate i dalje validan
     if (
       !this.selectedDate ||
       !this.availableDates.includes(this.selectedDate)
@@ -111,6 +126,8 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.selectedDate = this.availableDates[0];
       this.onDateChange();
     }
+
+    this.cdr.detectChanges(); // Forsiraj osvežavanje ekrana
   }
 
   /* ---------- PROMJENA DATUMA ---------- */
@@ -120,14 +137,11 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   setupMidnightTimer() {
+    if (this.midnightCheck) clearInterval(this.midnightCheck);
+
     this.midnightCheck = setInterval(() => {
-      const now = new Date();
-      // Ako je trenutno vreme tačno 00:00 (proveravamo jednom u minuti)
-      if (now.getHours() === 0 && now.getMinutes() === 0) {
-        console.log('Novi dan počeo, ažuriram termine...');
-        this.generateDates();
-      }
-    }, 60000); // 60.000 ms = 1 minut
+      this.checkAndRefreshDate();
+    }, 30000); // Proveravaj na svakih 30 sekundi
   }
 
   /* ---------- UČITAJ ZAUZETE TERMINE ---------- */
@@ -263,5 +277,22 @@ export class BookingComponent implements OnInit, OnDestroy {
       if (hour === currentHour && minute > currentMinute + 15) return true;
       return false;
     });
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus() {
+    this.checkAndRefreshDate();
+  }
+
+  // Pomoćna funkcija da se ne ponavlja kod
+  private checkAndRefreshDate() {
+    const todayStr = new Date().toDateString();
+    if (this.lastCheckedDate !== todayStr) {
+      console.log('Novi dan detektovan!');
+      this.lastCheckedDate = todayStr;
+      this.today = new Date(); // Osveži "Danas" marker
+      this.generateDates();
+      this.cdr.detectChanges();
+    }
   }
 }
