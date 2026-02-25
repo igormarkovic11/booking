@@ -10,7 +10,13 @@
       class="date-dropdown"
     >
       <option *ngFor="let date of availableDates" [ngValue]="date">
-        {{ date | date: "EEEE, dd.MM.yyyy" }}
+        <ng-container *ngIf="date === (today | date: 'yyyy-MM-dd')">
+          Danas, {{ date | date: "dd.MM.yyyy." }}
+        </ng-container>
+
+        <ng-container *ngIf="date !== (today | date: 'yyyy-MM-dd')">
+          {{ date | date: "EEEE, dd.MM.yyyy." | titlecase }}
+        </ng-container>
       </option>
     </select>
 

@@ -16,6 +16,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   selectedDate!: string;
   private checkDayTimer: any;
   private midnightCheck: any;
+  today = new Date(); // Dodaj ovo u klasu komponente
 
   /* ---------- TERMINI ---------- */
   allTimes: string[] = [
