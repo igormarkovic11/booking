@@ -44,9 +44,13 @@ export class DashboardComponent implements OnInit {
 
     if (isValid) {
       if (this.pendingAction) {
-        await this.pendingAction(); // Izvršavamo akciju
+        try {
+          await this.pendingAction(); // Čekamo da se brisanje završi
+          this.showToast('Akcija uspešno izvršena');
+        } catch (e) {
+          this.showToast('Greška pri izvršavanju!', 'error');
+        }
       }
-      this.showToast('Autorizacija uspješna');
       this.closePinModal();
     } else {
       this.showToast('Pogrešan PIN!', 'error');
@@ -151,6 +155,7 @@ export class DashboardComponent implements OnInit {
   newBooking = {
     name: '',
     phone: '',
+    email: '', // DODAJ OVO
     time: '',
     services: [] as string[],
   };
@@ -205,6 +210,12 @@ export class DashboardComponent implements OnInit {
 
   closeQuickAdd() {
     this.showQuickAddModal = false;
-    this.newBooking = { name: '', phone: '', time: '', services: [] };
+    this.newBooking = {
+      name: '',
+      phone: '',
+      email: '',
+      time: '',
+      services: [],
+    };
   }
 }
