@@ -1,0 +1,26 @@
+<div class="booking-page">
+  <div class="booking-card" style="text-align: center">
+    <div *ngIf="status === 'loading'">
+      <h2>Otkazivanje u toku...</h2>
+    </div>
+
+    <div *ngIf="status === 'success'">
+      <div style="font-size: 4rem; margin-bottom: 20px">✅</div>
+      <h2 style="color: #4caf50">Termin je otkazan</h2>
+      <p style="margin-bottom: 30px; opacity: 0.8">
+        Vaš termin je uspešno obrisan iz našeg sistema. Hvala što ste nas
+        obavestili.
+      </p>
+      <button class="submit-btn" routerLink="/">Vrati se na početnu</button>
+    </div>
+
+    <div *ngIf="status === 'error'">
+      <div style="font-size: 4rem; margin-bottom: 20px">❌</div>
+      <h2 style="color: #ff5252">Greška pri otkazivanju</h2>
+      <p style="margin-bottom: 30px; opacity: 0.8">
+        Link nije validan, termin je već otkazan ili ne postoji.
+      </p>
+      <button class="submit-btn" routerLink="/">Idi na zakazivanje</button>
+    </div>
+  </div>
+</div>

@@ -6,7 +6,7 @@ import { AboutComponent } from './pages/about/about.component';
 import { FavorsComponent } from './pages/favors/favors.component';
 import { BookingComponent } from './pages/booking/booking.component';
 import { ConfirmComponent } from './pages/confirm/confirm.component';
-//import { SelectOptionsComponent } from './pages/select-options/select-options.component';
+import { CancelComponent } from './pages/cancel/cancel.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -15,7 +15,7 @@ const routes: Routes = [
   { path: 'favor', component: FavorsComponent },
   { path: 'booking', component: BookingComponent },
   { path: 'confirm', component: ConfirmComponent },
-  //{ path: 'select-options', component: SelectOptionsComponent },
+  { path: 'cancel', component: CancelComponent },
 ];
 
 @NgModule({

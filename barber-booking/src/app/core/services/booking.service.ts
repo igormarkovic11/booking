@@ -64,57 +64,47 @@ export class BookingService {
     return snapshot.empty;
   }
 
-  /* ---------- KREIRAJ REZERVACIJU (Popravljeno) ---------- */
-  async createBooking(booking: {
-    date: string;
-    time: string;
-    services: string[];
-    name: string;
-    phone: string;
-    email: string;
-  }) {
-    const token = this.generateToken();
+  /* ---------- KREIRAJ REZERVACIJU (Sa linkom za otkazivanje) ---------- */
+  async createBooking(booking: any) {
+    const confirmationToken = this.generateToken();
+    const cancellationId = this.generateToken(); // NOVO: Token za otkazivanje
     const createdAt = new Date();
     const newDocRef = doc(collection(this.firestore, 'bookings'));
     const bookingId = newDocRef.id;
     const expireAt = new Date(createdAt.getTime() + 20 * 60000);
 
-    // Formatiranje datuma za email (npr. 2024-05-20 -> 20.05.2024)
     const formattedDate = booking.date.split('-').reverse().join('.');
     const capitalizedName = this.capitalize(booking.name);
     const vocativeName = this.toVocative(capitalizedName);
 
+    // URL-ovi (Promeni ove linkove ako ti je domen drugačiji)
+    const confirmUrl = `https://booking-ashen-nine.vercel.app/confirm?bookingId=${bookingId}&token=${confirmationToken}`;
+    const cancelUrl = `https://booking-ashen-nine.vercel.app/cancel?id=${bookingId}&token=${cancellationId}`;
+
     const payload: any = {
       ...booking,
       status: 'pending',
-      confirmationToken: token,
+      confirmationToken,
+      cancellationId, // Čuvamo u bazi da bismo proverili pri otkazivanju
       createdAt,
       expireAt,
       to: [booking.email],
       message: {
         subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
         html: `
-        <div style="background-color: #121212; padding: 40px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff; text-align: center;">
-          <div style="max-width: 500px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="background-color: #121212; padding: 40px 20px; font-family: sans-serif; color: #ffffff; text-align: center;">
+          <div style="max-width: 500px; margin: 0 auto; background: #1e1e1e; border-radius: 20px; padding: 30px; border: 1px solid #333;">
+            <h1 style="color: #1976d2;">Pozdrav, ${vocativeName}!</h1>
+            <p>Vaš termin je skoro spreman. Molimo potvrdite dolazak:</p>
             
-            <h1 style="color: #1976d2; margin-bottom: 10px;">Pozdrav, ${vocativeName}!</h1>
-            <p style="font-size: 16px; opacity: 0.9;">Hvala vam što ste odabrali naše usluge. Vaš termin je skoro spreman.</p>
-            
-            <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left;">
-              <p style="margin: 5px 0;"><strong>📅 Datum:</strong> ${formattedDate}</p>
-              <p style="margin: 5px 0;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
-              <p style="margin: 5px 0;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
-            </div>
-
-            <p style="font-size: 14px; margin-bottom: 25px; color: #bbbbbb;">Molimo vas da potvrdite dolazak klikom na dugme ispod. Link je validan 15 minuta.</p>
-            
-            <a href="https://booking-ashen-nine.vercel.app/confirm?bookingId=${bookingId}&token=${token}" 
-               style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);">
+            <a href="${confirmUrl}" style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; margin: 20px 0;">
                POTVRDI TERMIN
             </a>
 
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: #777777;">
-              Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #333;">
+              <p style="font-size: 11px; color: #777;">
+                Ukoliko želite da odustanete, možete <a href="${cancelUrl}" style="color: #bbbbbb; text-decoration: underline;">otkazati vaš termin ovde</a>.
+              </p>
             </div>
           </div>
         </div>
@@ -126,6 +116,26 @@ export class BookingService {
     return newDocRef;
   }
 
+  /* ---------- NOVA METODA ZA OTKAZIVANJE ---------- */
+  async cancelBooking(bookingId: string, token: string): Promise<boolean> {
+    try {
+      const bookingRef = doc(this.firestore, `bookings/${bookingId}`);
+      const snap = await getDoc(bookingRef);
+
+      if (!snap.exists()) return false;
+      const data = snap.data();
+
+      // Proveravamo da li token za otkazivanje odgovara onom u bazi
+      if (data['cancellationId'] === token) {
+        await deleteDoc(bookingRef); // Ili updateDoc(bookingRef, { status: 'cancelled' })
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Greška pri otkazivanju:', error);
+      return false;
+    }
+  }
   /* ---------- POTVRDA TERMINA ---------- */
   async confirmBooking(
     bookingId: string,
