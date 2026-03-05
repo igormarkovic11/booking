@@ -89,16 +89,27 @@ export class AdminService {
   }
 
   async deleteBookingAndNotify(booking: any) {
+    // 1. Prvo brišemo originalni termin (dokument koji ima status 'confirmed')
     const docRef = doc(this.firestore, `bookings/${booking.id}`);
 
-    // 1. PRVO obrišemo dokument da oslobodimo slot
-    await deleteDoc(docRef);
+    try {
+      await deleteDoc(docRef);
+    } catch (err) {
+      console.error('Greška pri brisanju dokumenta:', err);
+      throw err; // Ako ne obriše termin, nećemo ni slati lažni mail dokument
+    }
 
-    // 2. ONDA pokušamo poslati email, ali ne dozvoljavamo da greška ovde zaustavi proces
-    if (booking.email) {
+    // 2. Ako klijent ima email, šaljemo email kroz ISTU kolekciju (bookings)
+    // jer tvoja ekstenzija trenutno sluša samo tu kolekciju
+    if (booking.email && booking.email.trim() !== '') {
       try {
         const formattedDate = booking.date.split('-').reverse().join('.');
+
+        // PAŽNJA: Menjamo 'mail' u 'bookings' jer tvoja ekstenzija sluša 'bookings'
+        const bookingsCollection = collection(this.firestore, 'bookings');
+
         const mailPayload = {
+          // Polja koja Trigger Email ekstenzija zahteva:
           to: [booking.email],
           message: {
             subject: `Otkazan termin: ${formattedDate} u ${booking.time}`,
@@ -122,13 +133,19 @@ export class AdminService {
           </div>
           `,
           },
-          status: 'cancelled',
+          // Polja koja pomažu tebi i tvom dashboardu:
+          status: 'cancelled', // Da bi getBookingsForDate ignorisao ovaj dokument
+          type: 'email_trigger', // Opciona oznaka radi lakšeg snalaženja u bazi
           createdAt: new Date(),
         };
 
-        await addDoc(collection(this.firestore, 'mail'), mailPayload);
+        await addDoc(bookingsCollection, mailPayload);
+        console.log(
+          'Zahtev za otkazni email uspešno kreiran u bookings kolekciji.',
+        );
       } catch (mailError) {
-        console.error('Email nije poslat, ali termin je obrisan:', mailError);
+        // Logujemo grešku ali ne prekidamo proces jer je termin već obrisan
+        console.error('Email trigger neuspešan:', mailError);
       }
     }
   }
