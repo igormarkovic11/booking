@@ -41,10 +41,10 @@ export class AdminService {
   }
 
   /* OTKAŽI/OBRIŠI REZERVACIJU */
-  async deleteBooking(bookingId: string) {
-    const docRef = doc(this.firestore, `bookings/${bookingId}`);
-    return await deleteDoc(docRef);
-  }
+  // async deleteBooking(bookingId: string) {
+  //   const docRef = doc(this.firestore, `bookings/${bookingId}`);
+  //   return await deleteDoc(docRef);
+  // }
 
   /* RUČNO DODAVANJE (CONFIRMED) */
   async createManualBooking(booking: any) {
@@ -86,5 +86,50 @@ export class AdminService {
       console.error('Greška pri dodavanju rezervacije:', error);
       throw error;
     }
+  }
+
+  async deleteBookingAndNotify(booking: any) {
+    const docRef = doc(this.firestore, `bookings/${booking.id}`);
+
+    // 1. Formatiranje podataka za email
+    const formattedDate = booking.date.split('-').reverse().join('.');
+
+    const mailPayload = {
+      to: [booking.email],
+      message: {
+        subject: `Otkazan termin: ${formattedDate} u ${booking.time}`,
+        html: `
+      <div style="background-color: #121212; padding: 40px 10px; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #ffffff; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
+          <h1 style="color: #ff5252; margin-top: 0;">Termin je otkazan</h1>
+          <p style="font-size: 16px; color: #eeeeee;">Zdravo ${booking.name}, obavještavamo Vas da je Vaš termin otkazan.</p>
+          
+          <div style="background-color: #2a2a2a; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
+            <p style="margin: 5px 0; color: #ffffff;"><strong>📅 Datum:</strong> ${formattedDate}</p>
+            <p style="margin: 5px 0; color: #ffffff;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
+            <p style="margin: 5px 0; color: #ffffff;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
+          </div>
+
+          <p style="font-size: 14px; color: #777777; line-height: 1.6;">
+            Svoj novi termin možete zakazati ponovo putem naše aplikacije.
+          </p>
+
+          <a href="https://booking-ashen-nine.vercel.app/" 
+             style="display: inline-block; margin-top: 20px; padding: 12px 25px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold;">
+             ZAKAŽI NOVI TERMIN
+          </a>
+        </div>
+      </div>
+      `,
+      },
+    };
+
+    // 2. Prvo šaljemo mejl (kreiramo dokument u 'mail' kolekciji)
+    if (booking.email) {
+      await addDoc(collection(this.firestore, 'mail'), mailPayload);
+    }
+
+    // 3. Brišemo termin
+    return await deleteDoc(docRef);
   }
 }

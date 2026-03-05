@@ -21,7 +21,7 @@ export class DashboardComponent implements OnInit {
   showQuickAddModal = false; // Dodato za formu
 
   tempPin = '';
-  bookingToDeleteId: string | null = null;
+  selectedBooking: any = null; // Promijenjeno sa bookingToDeleteId
   pendingAction: (() => void) | null = null;
 
   notification = { show: false, message: '', type: 'success' };
@@ -62,25 +62,26 @@ export class DashboardComponent implements OnInit {
   }
 
   // --- BRISANJE (Bez confirm() alerta) ---
-  confirmDelete(id: string) {
-    this.bookingToDeleteId = id;
+  confirmDelete(booking: any) {
+    this.selectedBooking = booking; // Čuvamo cijeli objekt
     this.showDeleteModal = true;
   }
 
   async executeDelete() {
-    if (!this.bookingToDeleteId) return;
+    if (!this.selectedBooking) return;
 
-    const idToProcess = this.bookingToDeleteId; // Čuvamo ID lokalno
-
-    // 1. ZATVORI prvi modal odmah da ne smeta
+    const bookingToProcess = this.selectedBooking;
     this.closeDeleteModal();
 
-    // 2. OTVORI PIN modal
     this.runWithPin(async () => {
       try {
-        await this.adminService.deleteBooking(idToProcess);
-        this.bookings = this.bookings.filter((b) => b.id !== idToProcess);
-        this.showToast('Termin uspješno obrisan');
+        // Pozivamo novu metodu koja briše i šalje mejl
+        await this.adminService.deleteBookingAndNotify(bookingToProcess);
+
+        this.bookings = this.bookings.filter(
+          (b) => b.id !== bookingToProcess.id,
+        );
+        this.showToast('Termin obrisan i klijent obaviješten');
       } catch (error) {
         this.showToast('Greška pri brisanju', 'error');
       }
@@ -89,7 +90,7 @@ export class DashboardComponent implements OnInit {
 
   closeDeleteModal() {
     this.showDeleteModal = false;
-    this.bookingToDeleteId = null;
+    this.selectedBooking = null;
   }
 
   // --- OSTALE METODE ---

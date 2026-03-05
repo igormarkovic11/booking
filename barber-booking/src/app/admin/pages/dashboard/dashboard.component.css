@@ -328,3 +328,18 @@
   background: rgba(255, 255, 255, 0.2);
   border-radius: 10px;
 }
+
+.action-btn.notify-cancel {
+  color: #ffb300; /* Žuta/Narandžasta boja za upozorenje */
+  border: 1px solid #ffb300;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.action-btn.notify-cancel:hover {
+  background: rgba(255, 179, 0, 0.2);
+  transform: scale(1.05);
+}
