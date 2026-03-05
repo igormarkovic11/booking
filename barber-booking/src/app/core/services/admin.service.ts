@@ -122,6 +122,8 @@ export class AdminService {
           </div>
           `,
           },
+          status: 'cancelled',
+          createdAt: new Date(),
         };
 
         await addDoc(collection(this.firestore, 'mail'), mailPayload);
