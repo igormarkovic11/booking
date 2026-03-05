@@ -92,23 +92,32 @@ export class BookingService {
       message: {
         subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
         html: `
-        <div style="background-color: #121212; padding: 40px 20px; font-family: sans-serif; color: #ffffff; text-align: center;">
-          <div style="max-width: 500px; margin: 0 auto; background: #1e1e1e; border-radius: 20px; padding: 30px; border: 1px solid #333;">
-            <h1 style="color: #1976d2;">Pozdrav, ${vocativeName}!</h1>
-            <p>Vaš termin je skoro spreman. Molimo potvrdite dolazak:</p>
-            
-            <a href="${confirmUrl}" style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; margin: 20px 0;">
-               POTVRDI TERMIN
-            </a>
+      <div style="background-color: #121212; padding: 40px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          
+          <h1 style="color: #1976d2; margin-bottom: 10px;">Pozdrav, ${vocativeName}!</h1>
+          <p style="font-size: 16px; opacity: 0.9;">Hvala vam što ste odabrali naše usluge. Vaš termin je skoro spreman.</p>
+          
+          <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left;">
+            <p style="margin: 5px 0;"><strong>📅 Datum:</strong> ${formattedDate}</p>
+            <p style="margin: 5px 0;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
+            <p style="margin: 5px 0;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
+          </div>
 
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #333;">
-              <p style="font-size: 11px; color: #777;">
-                Ukoliko želite da odustanete, možete <a href="${cancelUrl}" style="color: #bbbbbb; text-decoration: underline;">otkazati vaš termin ovde</a>.
-              </p>
-            </div>
+          <p style="font-size: 14px; margin-bottom: 25px; color: #bbbbbb;">Molimo vas da potvrdite dolazak klikom na dugme ispod. Link je validan 15 minuta.</p>
+          
+          <a href="${confirmUrl}" 
+             style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);">
+             POTVRDI TERMIN
+          </a>
+
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: #777777;">
+            Ukoliko želite odustati, svoj termin možete <a href="${cancelUrl}" style="color: #1976d2; text-decoration: underline;">otkazati ovdje</a>.<br><br>
+            Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
           </div>
         </div>
-      `,
+      </div>
+    `,
       },
     };
 

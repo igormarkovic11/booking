@@ -1,26 +1,31 @@
-<div class="booking-page">
-  <div class="booking-card" style="text-align: center">
-    <div *ngIf="status === 'loading'">
+<div class="cancel-page">
+  <div class="cancel-card">
+    <div *ngIf="status === 'loading'" class="status-box">
+      <div class="spinner"></div>
       <h2>Otkazivanje u toku...</h2>
+      <p>Molimo sačekajte dok obradimo vaš zahtev.</p>
     </div>
 
-    <div *ngIf="status === 'success'">
-      <div style="font-size: 4rem; margin-bottom: 20px">✅</div>
-      <h2 style="color: #4caf50">Termin je otkazan</h2>
-      <p style="margin-bottom: 30px; opacity: 0.8">
-        Vaš termin je uspešno obrisan iz našeg sistema. Hvala što ste nas
-        obavestili.
+    <div *ngIf="status === 'success'" class="status-box">
+      <div class="icon success">✅</div>
+      <h2>Termin je otkazan</h2>
+      <p>
+        Uspešno ste otkazali svoj termin. Hvala što ste nas obavestili na vreme.
       </p>
-      <button class="submit-btn" routerLink="/">Vrati se na početnu</button>
+      <button class="home-btn" (click)="navigateToHome()">
+        Vrati se na početnu
+      </button>
     </div>
 
-    <div *ngIf="status === 'error'">
-      <div style="font-size: 4rem; margin-bottom: 20px">❌</div>
-      <h2 style="color: #ff5252">Greška pri otkazivanju</h2>
-      <p style="margin-bottom: 30px; opacity: 0.8">
-        Link nije validan, termin je već otkazan ili ne postoji.
+    <div *ngIf="status === 'error'" class="status-box">
+      <div class="icon error">❌</div>
+      <h2>Greška pri otkazivanju</h2>
+      <p>
+        Link nije validan, termin je već otkazan ili više ne postoji u sistemu.
       </p>
-      <button class="submit-btn" routerLink="/">Idi na zakazivanje</button>
+      <button class="home-btn" (click)="navigateToHome()">
+        Vrati se na početnu
+      </button>
     </div>
   </div>
 </div>

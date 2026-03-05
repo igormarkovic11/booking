@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BookingService } from '../../../core/services/booking.service';
 
 @Component({
@@ -15,6 +15,7 @@ export class CancelComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private bookingService: BookingService,
   ) {}
 
@@ -28,5 +29,9 @@ export class CancelComponent implements OnInit {
     } else {
       this.status = 'error';
     }
+  }
+
+  navigateToHome() {
+    this.router.navigate(['/']);
   }
 }
