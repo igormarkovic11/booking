@@ -64,54 +64,56 @@ export class BookingService {
     return snapshot.empty;
   }
 
-  /* ---------- KREIRAJ REZERVACIJU (Sa linkom za otkazivanje) ---------- */
-  async createBooking(booking: any) {
-    const confirmationToken = this.generateToken();
-    const cancellationId = this.generateToken(); // NOVO: Token za otkazivanje
+  /* ---------- KREIRAJ REZERVACIJU (Gmail-friendly verzija) ---------- */
+  async createBooking(booking: {
+    date: string;
+    time: string;
+    services: string[];
+    name: string;
+    phone: string;
+    email: string;
+  }) {
+    const token = this.generateToken();
+    const cancellationId = this.generateToken();
     const createdAt = new Date();
     const newDocRef = doc(collection(this.firestore, 'bookings'));
     const bookingId = newDocRef.id;
-    const expireAt = new Date(createdAt.getTime() + 20 * 60000);
 
     const formattedDate = booking.date.split('-').reverse().join('.');
     const capitalizedName = this.capitalize(booking.name);
     const vocativeName = this.toVocative(capitalizedName);
 
-    // URL-ovi (Promeni ove linkove ako ti je domen drugačiji)
-    const confirmUrl = `https://booking-ashen-nine.vercel.app/confirm?bookingId=${bookingId}&token=${confirmationToken}`;
+    const confirmUrl = `https://booking-ashen-nine.vercel.app/confirm?bookingId=${bookingId}&token=${token}`;
     const cancelUrl = `https://booking-ashen-nine.vercel.app/cancel?id=${bookingId}&token=${cancellationId}`;
 
     const payload: any = {
       ...booking,
       status: 'pending',
-      confirmationToken,
-      cancellationId, // Čuvamo u bazi da bismo proverili pri otkazivanju
+      confirmationToken: token,
+      cancellationId: cancellationId,
       createdAt,
-      expireAt,
       to: [booking.email],
       message: {
         subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
         html: `
-      <div style="background-color: #121212; padding: 40px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #ffffff; text-align: center;">
-        <div style="max-width: 500px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+      <div style="background-color: #121212; padding: 40px 10px; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #ffffff; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
           
-          <h1 style="color: #1976d2; margin-bottom: 10px;">Pozdrav, ${vocativeName}!</h1>
-          <p style="font-size: 16px; opacity: 0.9;">Hvala vam što ste odabrali naše usluge. Vaš termin je skoro spreman.</p>
+          <h1 style="color: #1976d2; margin-top: 0;">Pozdrav, ${vocativeName}!</h1>
+          <p style="font-size: 16px; color: #eeeeee;">Vaš termin je skoro spreman. Molimo potvrdite dolazak:</p>
           
-          <div style="background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left;">
-            <p style="margin: 5px 0;"><strong>📅 Datum:</strong> ${formattedDate}</p>
-            <p style="margin: 5px 0;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
-            <p style="margin: 5px 0;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
+          <div style="background-color: #2a2a2a; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
+            <p style="margin: 5px 0; color: #ffffff;"><strong>📅 Datum:</strong> ${formattedDate}</p>
+            <p style="margin: 5px 0; color: #ffffff;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
+            <p style="margin: 5px 0; color: #ffffff;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
           </div>
 
-          <p style="font-size: 14px; margin-bottom: 25px; color: #bbbbbb;">Molimo vas da potvrdite dolazak klikom na dugme ispod. Link je validan 15 minuta.</p>
-          
           <a href="${confirmUrl}" 
-             style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);">
+             style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
              POTVRDI TERMIN
           </a>
 
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: #777777;">
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333333; font-size: 12px; color: #777777;">
             Ukoliko želite odustati, svoj termin možete <a href="${cancelUrl}" style="color: #1976d2; text-decoration: underline;">otkazati ovdje</a>.<br><br>
             Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
           </div>
