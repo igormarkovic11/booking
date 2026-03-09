@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
   CollectionReference,
   DocumentData,
@@ -11,7 +11,6 @@ import {
   doc,
   deleteDoc,
   setDoc,
-  Query,
   getDoc,
 } from '@angular/fire/firestore';
 
@@ -19,14 +18,10 @@ import {
   providedIn: 'root',
 })
 export class AdminService {
-  private bookingsRef: CollectionReference<DocumentData>;
+  private firestore = inject(Firestore);
+  private bookingsRef = collection(this.firestore, 'bookings');
 
-  constructor(private firestore: Firestore) {
-    this.bookingsRef = collection(this.firestore, 'bookings');
-  }
-
-  /* DOHVATI SVE POTVRĐENE TERMINE ZA ADMINA */
-  // PROMENI NAZIV OVDE:
+  /* DOHVATI REZERVACIJE */
   async getBookingsForDate(date: string) {
     const q = query(
       this.bookingsRef,
@@ -38,25 +33,6 @@ export class AdminService {
     return snapshot.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
       .sort((a: any, b: any) => a.time.localeCompare(b.time));
-  }
-
-  /* OTKAŽI/OBRIŠI REZERVACIJU */
-  // async deleteBooking(bookingId: string) {
-  //   const docRef = doc(this.firestore, `bookings/${bookingId}`);
-  //   return await deleteDoc(docRef);
-  // }
-
-  /* RUČNO DODAVANJE (CONFIRMED) */
-  async createManualBooking(booking: any) {
-    const newDocRef = doc(collection(this.firestore, 'bookings'));
-    const payload = {
-      ...booking,
-      status: 'confirmed',
-      createdAt: new Date(),
-      createdBy: 'admin',
-    };
-    await setDoc(newDocRef, payload);
-    return newDocRef.id;
   }
 
   async verifyPin(enteredPin: string): Promise<boolean> {
@@ -147,6 +123,22 @@ export class AdminService {
         // Logujemo grešku ali ne prekidamo proces jer je termin već obrisan
         console.error('Email trigger neuspešan:', mailError);
       }
+    }
+  }
+
+  /* NERADNI DANI LOGIKA */
+  async checkIfDayOff(date: string): Promise<boolean> {
+    const docRef = doc(this.firestore, `dayoffs/${date}`);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists();
+  }
+
+  async toggleDayOff(date: string, shouldBeOff: boolean) {
+    const docRef = doc(this.firestore, `dayoffs/${date}`);
+    if (shouldBeOff) {
+      await setDoc(docRef, { date, status: 'off', createdAt: new Date() });
+    } else {
+      await deleteDoc(docRef);
     }
   }
 }

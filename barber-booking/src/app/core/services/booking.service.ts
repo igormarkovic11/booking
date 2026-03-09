@@ -243,4 +243,35 @@ export class BookingService {
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   }
+
+  /* ---------- DOHVATI SVE NERADNE DANE ---------- */
+  async getManualDayOffs(): Promise<string[]> {
+    try {
+      const dayOffsRef = collection(this.firestore, 'dayoffs');
+      const snapshot = await getDocs(dayOffsRef);
+      // Vraćamo niz ID-jeva (jer su ID-jevi zapravo datumi u formatu YYYY-MM-DD)
+      return snapshot.docs.map((doc) => doc.id);
+    } catch (e) {
+      console.error('Greška pri dohvatanju slobodnih dana', e);
+      return [];
+    }
+  }
+
+  /* ---------- DOHVATI SVE RUČNO ZATVORENE DANE ---------- */
+  async getDayOffs(): Promise<string[]> {
+    const dayOffsRef = collection(this.firestore, 'dayoffs');
+    const snapshot = await getDocs(dayOffsRef);
+    // Vraća niz stringova u formatu 'YYYY-MM-DD'
+    return snapshot.docs.map((doc) => doc.id);
+  }
+
+  /* ---------- METODA ZA ADMINA (da zatvori/otvori dan) ---------- */
+  async toggleDayOff(date: string, isOff: boolean) {
+    const docRef = doc(this.firestore, `dayoffs/${date}`);
+    if (isOff) {
+      await setDoc(docRef, { date, createdAt: new Date() });
+    } else {
+      await deleteDoc(docRef);
+    }
+  }
 }

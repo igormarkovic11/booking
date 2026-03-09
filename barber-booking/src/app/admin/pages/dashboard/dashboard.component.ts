@@ -1,134 +1,35 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common'; // Dodaj DatePipe
-import { AdminService } from '../../../core/services/admin.service';
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AdminService } from '../../../core/services/admin.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule], // CommonModule sadrži NgIf, NgFor i DatePipe
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
+  // Koristimo inject umjesto konstruktora za stabilniji rad sa Firebase-om
+  private adminService = inject(AdminService);
+
   bookings: any[] = [];
   selectedDay: string = new Date().toISOString().split('T')[0];
   loading = false;
+  isCurrentDayOff = false;
 
   // Modali state
   showPinModal = false;
   showDeleteModal = false;
-  showQuickAddModal = false; // Dodato za formu
+  showQuickAddModal = false;
 
   tempPin = '';
-  selectedBooking: any = null; // Promijenjeno sa bookingToDeleteId
+  selectedBooking: any = null;
   pendingAction: (() => void) | null = null;
-
   notification = { show: false, message: '', type: 'success' };
 
-  constructor(private adminService: AdminService) {}
-
-  ngOnInit() {
-    this.loadAdminBookings();
-  }
-
-  // --- LOGIKA ZA PIN ---
-  runWithPin(action: () => void) {
-    this.pendingAction = action;
-    this.showPinModal = true;
-  }
-
-  async confirmActionWithPin() {
-    this.loading = true;
-    const isValid = await this.adminService.verifyPin(this.tempPin);
-
-    if (isValid) {
-      if (this.pendingAction) {
-        try {
-          await this.pendingAction(); // Čekamo da se brisanje završi
-          this.showToast('Akcija uspešno izvršena');
-        } catch (e) {
-          this.showToast('Greška pri izvršavanju!', 'error');
-        }
-      }
-      this.closePinModal();
-    } else {
-      this.showToast('Pogrešan PIN!', 'error');
-      this.tempPin = '';
-    }
-    this.loading = false;
-  }
-
-  closePinModal() {
-    this.showPinModal = false;
-    this.tempPin = '';
-    this.pendingAction = null;
-  }
-
-  // --- BRISANJE (Bez confirm() alerta) ---
-  confirmDelete(booking: any) {
-    this.selectedBooking = booking; // Čuvamo cijeli objekt
-    this.showDeleteModal = true;
-  }
-
-  async executeDelete() {
-    if (!this.selectedBooking) return;
-
-    const bookingToProcess = this.selectedBooking;
-    this.closeDeleteModal();
-
-    this.runWithPin(async () => {
-      try {
-        // Pozivamo novu metodu koja briše i šalje mejl
-        await this.adminService.deleteBookingAndNotify(bookingToProcess);
-
-        this.bookings = this.bookings.filter(
-          (b) => b.id !== bookingToProcess.id,
-        );
-        this.showToast('Termin obrisan i klijent obaviješten');
-      } catch (error) {
-        this.showToast('Greška pri brisanju', 'error');
-      }
-    });
-  }
-
-  closeDeleteModal() {
-    this.showDeleteModal = false;
-    this.selectedBooking = null;
-  }
-
-  // --- OSTALE METODE ---
-  async loadAdminBookings() {
-    this.loading = true;
-    try {
-      this.bookings = await this.adminService.getBookingsForDate(
-        this.selectedDay,
-      );
-    } catch (error) {
-      this.showToast('Greška pri učitavanju', 'error');
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  changeDate(days: number) {
-    const d = new Date(this.selectedDay);
-    d.setDate(d.getDate() + days);
-    this.selectedDay = d.toISOString().split('T')[0];
-    this.loadAdminBookings();
-  }
-
-  showToast(msg: string, type: string = 'success') {
-    this.notification = { show: true, message: msg, type };
-    setTimeout(() => (this.notification.show = false), 3000);
-  }
-
-  copyToClipboard(phone: string) {
-    navigator.clipboard.writeText(phone).then(() => {
-      this.showToast('Broj kopiran: ' + phone);
-    });
-  }
-
+  // Podaci za formu
   availableTimes = [
     '08:00',
     '08:30',
@@ -151,26 +52,146 @@ export class DashboardComponent implements OnInit {
     '17:00',
   ];
   allServices = ['Šišanje', 'Brijanje', 'Stilizovanje', 'Trimovanje'];
-
   newBooking = {
     name: '',
     phone: '',
-    email: '', // DODAJ OVO
+    email: '',
     time: '',
     services: [] as string[],
   };
 
-  // Getter koji filtrira termine: izbacuje one koji su već rezervisani
-  get filteredAvailableTimes() {
-    const bookedTimes = this.bookings.map((b) => b.time);
-    return this.availableTimes.filter((t) => !bookedTimes.includes(t));
+  ngOnInit() {
+    this.loadAdminData();
   }
 
-  // Otvara PIN proveru, pa ako prođe, otvara Quick Add modal
+  // Glavna funkcija koja osvježava sve na promjenu datuma
+  async loadAdminData() {
+    this.loading = true;
+    try {
+      // 1. Učitaj rezervacije
+      this.bookings = await this.adminService.getBookingsForDate(
+        this.selectedDay,
+      );
+      // 2. Provjeri da li je taj dan neradni u bazi
+      this.isCurrentDayOff = await this.adminService.checkIfDayOff(
+        this.selectedDay,
+      );
+    } catch (error) {
+      this.showToast('Greška pri učitavanju podataka', 'error');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  // --- NAVIGACIJA ---
+  changeDate(days: number) {
+    const d = new Date(this.selectedDay);
+    d.setDate(d.getDate() + days);
+    this.selectedDay = d.toISOString().split('T')[0];
+    this.loadAdminData();
+  }
+
+  onDateChange() {
+    this.loadAdminData();
+  }
+
+  // --- LOGIKA ZA PIN ---
+  runWithPin(action: () => void) {
+    this.pendingAction = action;
+    this.showPinModal = true;
+  }
+
+  async confirmActionWithPin() {
+    this.loading = true;
+    const isValid = await this.adminService.verifyPin(this.tempPin);
+
+    if (isValid) {
+      if (this.pendingAction) {
+        try {
+          await this.pendingAction();
+        } catch (e) {
+          this.showToast('Greška pri izvršavanju!', 'error');
+        }
+      }
+      this.closePinModal();
+    } else {
+      this.showToast('Pogrešan PIN!', 'error');
+      this.tempPin = '';
+    }
+    this.loading = false;
+  }
+
+  closePinModal() {
+    this.showPinModal = false;
+    this.tempPin = '';
+    this.pendingAction = null;
+  }
+
+  // --- NERADNI DAN (DAY OFF) ---
+  async toggleDayOff() {
+    this.runWithPin(async () => {
+      try {
+        const newState = !this.isCurrentDayOff;
+        await this.adminService.toggleDayOff(this.selectedDay, newState);
+        this.isCurrentDayOff = newState;
+        this.showToast(newState ? 'Dan je zatvoren' : 'Dan je ponovo otvoren');
+      } catch (e) {
+        this.showToast('Greška pri promeni statusa dana', 'error');
+      }
+    });
+  }
+
+  // --- REZERVACIJE (DODAVANJE I BRISANJE) ---
   quickAdd() {
     this.runWithPin(() => {
       this.showQuickAddModal = true;
     });
+  }
+
+  async saveQuickBooking() {
+    if (!this.newBooking.name || !this.newBooking.time) {
+      this.showToast('Ime i vrijeme su obavezni!', 'error');
+      return;
+    }
+
+    this.loading = true;
+    try {
+      await this.adminService.addBooking({
+        ...this.newBooking,
+        date: this.selectedDay,
+        status: 'confirmed',
+      });
+      this.showToast('Termin uspješno dodat!');
+      await this.loadAdminData();
+      this.closeQuickAdd();
+    } catch (error) {
+      this.showToast('Greška pri čuvanju', 'error');
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  confirmDelete(booking: any) {
+    this.selectedBooking = booking;
+    this.showDeleteModal = true;
+  }
+
+  async executeDelete() {
+    if (!this.selectedBooking) return;
+    const bookingToProcess = this.selectedBooking;
+    this.closeDeleteModal();
+
+    this.runWithPin(async () => {
+      await this.adminService.deleteBookingAndNotify(bookingToProcess);
+      this.bookings = this.bookings.filter((b) => b.id !== bookingToProcess.id);
+      this.showToast('Termin obrisan');
+    });
+  }
+
+  // --- POMOĆNE METODE ---
+  get filteredAvailableTimes() {
+    const bookedTimes = this.bookings.map((b) => b.time);
+    return this.availableTimes.filter((t) => !bookedTimes.includes(t));
   }
 
   toggleService(service: string) {
@@ -182,30 +203,9 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  async saveQuickBooking() {
-    if (!this.newBooking.name || !this.newBooking.time) {
-      this.showToast('Ime i vrijeme su obavezni!', 'error');
-      return;
-    }
-
-    this.loading = true;
-    try {
-      const bookingData = {
-        ...this.newBooking,
-        date: this.selectedDay,
-        status: 'confirmed', // Admin odmah potvrđuje
-        createdAt: new Date(),
-      };
-
-      await this.adminService.addBooking(bookingData);
-      this.showToast('Termin uspješno dodat!');
-      this.loadAdminBookings(); // Osveži listu na ekranu
-      this.closeQuickAdd();
-    } catch (error) {
-      this.showToast('Greška pri čuvanju', 'error');
-    } finally {
-      this.loading = false;
-    }
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.selectedBooking = null;
   }
 
   closeQuickAdd() {
@@ -217,5 +217,16 @@ export class DashboardComponent implements OnInit {
       time: '',
       services: [],
     };
+  }
+
+  showToast(msg: string, type: string = 'success') {
+    this.notification = { show: true, message: msg, type };
+    setTimeout(() => (this.notification.show = false), 3000);
+  }
+
+  copyToClipboard(phone: string) {
+    navigator.clipboard.writeText(phone).then(() => {
+      this.showToast('Broj kopiran: ' + phone);
+    });
   }
 }

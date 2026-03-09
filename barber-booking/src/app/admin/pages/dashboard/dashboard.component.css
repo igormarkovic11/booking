@@ -71,26 +71,15 @@
 }
 /* HEADER */
 .admin-header {
-  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
   .title-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-  }
-}
-
-.date-navigator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 10px;
-  border-radius: 12px;
-  .date-display {
-    font-weight: 600;
-    font-size: 1.1rem;
   }
 }
 
@@ -342,4 +331,197 @@
 .action-btn.notify-cancel:hover {
   background: rgba(255, 179, 0, 0.2);
   transform: scale(1.05);
+}
+
+/* NOVI STILOVI ZA DAY OFF */
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dayoff-btn {
+  background: rgba(255, 179, 0, 0.1);
+  border: 1px solid #ffb300;
+  color: #ffb300;
+  padding: 8px 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.dayoff-btn:hover {
+  background: rgba(255, 179, 0, 0.2);
+}
+
+.dayoff-btn.active {
+  background: #ffb300;
+  color: #121212;
+}
+
+.day-off-banner {
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid #ff5252;
+  color: #ff5252;
+  text-align: center;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Prilagođavanje za telefon (ispod tvojih media query-ja) */
+@media (max-width: 480px) {
+  .title-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .header-actions {
+    width: 100%;
+  }
+  .dayoff-btn,
+  .add-btn {
+    flex: 1;
+  }
+}
+
+/* PRVI RED: Naslov lijevo, Dugmići desno */
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.top-row h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* DRUGI RED: Navigator datuma */
+.date-row {
+  display: flex;
+  justify-content: center; /* Centrirano na desktopu */
+  width: 100%;
+}
+
+/* --- NOVO: STIL ZA KALENDAR NAVIGATOR --- */
+.date-navigator {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 15px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.date-navigator button {
+  background: transparent;
+  border: none;
+  color: #1976d2;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+}
+
+/* Sakrivanje ružnog belog okvira oko kalendara */
+.calendar-input {
+  background: transparent;
+  border: none;
+  color: white;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Bela ikonica kalendara umesto crne */
+.calendar-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+/* RESPONSIVE (MOBILNI) */
+@media (max-width: 600px) {
+  .top-row {
+    flex-direction: column; /* Naslov pa dugmići jedan ispod drugog */
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  .header-actions button {
+    flex: 1; /* Dugmići se šire jednako na mobilnom */
+    padding: 12px 5px;
+  }
+
+  .date-row {
+    justify-content: center;
+  }
+}
+
+/* Desktop specifično: Ako želiš da dugmići ne budu preveliki */
+@media (min-width: 601px) {
+  .header-actions {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+/* --- NOVO: STIL ZA DAY OFF BANER --- */
+.day-off-banner {
+  background: rgba(255, 82, 82, 0.15);
+  border: 1px solid #ff5252;
+  color: #ff5252;
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

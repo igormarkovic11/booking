@@ -1,18 +1,45 @@
 <div class="admin-page">
   <div class="admin-card main-panel">
     <div class="admin-header">
-      <div class="title-section">
+      <div class="top-row">
         <h2>Pregled termina</h2>
-        <button class="add-btn" (click)="quickAdd()">Novi termin</button>
+        <div class="header-actions">
+          <button
+            class="dayoff-btn"
+            [class.active]="isCurrentDayOff"
+            (click)="toggleDayOff()"
+          >
+            {{ isCurrentDayOff ? "🔓 Otvori dan" : "🚫 Zatvori dan" }}
+          </button>
+
+          <button
+            class="add-btn"
+            (click)="quickAdd()"
+            [disabled]="isCurrentDayOff"
+          >
+            Novi termin
+          </button>
+        </div>
       </div>
 
-      <div class="date-navigator">
-        <button (click)="changeDate(-1)">◀</button>
-        <span class="date-display">{{
-          selectedDay | date: "dd.MM.yyyy."
-        }}</span>
-        <button (click)="changeDate(1)">▶</button>
+      <div class="date-row">
+        <div class="date-navigator">
+          <button (click)="changeDate(-1)">◀</button>
+
+          <input
+            type="date"
+            [(ngModel)]="selectedDay"
+            (change)="onDateChange()"
+            class="calendar-input"
+          />
+
+          <button (click)="changeDate(1)">▶</button>
+        </div>
       </div>
+    </div>
+
+    <div class="day-off-banner" *ngIf="isCurrentDayOff">
+      ⚠️ DAN JE OZNAČEN KAO NERADNI
     </div>
 
     <div class="bookings-list">
@@ -33,11 +60,10 @@
             [href]="'tel:' + b.phone"
             class="action-btn call"
             (click)="copyToClipboard(b.phone)"
-            title="Klikni da pozoveš i kopiraš broj"
+            title="Pozovi i kopiraj broj"
           >
             📞
           </a>
-
           <button (click)="confirmDelete(b)" class="action-btn delete">
             🗑️
           </button>
@@ -60,7 +86,9 @@
       placeholder="****"
     />
     <div class="modal-actions">
-      <button class="action-btn" (click)="closePinModal()">Odustani</button>
+      <button class="action-btn cancel" (click)="closePinModal()">
+        Odustani
+      </button>
       <button class="add-btn" (click)="confirmActionWithPin()">Potvrdi</button>
     </div>
   </div>
@@ -70,11 +98,7 @@
   <div class="admin-card modal-content delete-modal">
     <div class="modal-icon">⚠️</div>
     <h3>Brisanje termina</h3>
-    <p>
-      Jeste li sigurni da želite obrisati ovaj termin? Ova akcija se ne može
-      poništiti.
-    </p>
-
+    <p>Jeste li sigurni? Klijent će dobiti email obaveštenje o otkazivanju.</p>
     <div class="modal-actions">
       <button class="action-btn cancel" (click)="closeDeleteModal()">
         Odustani
@@ -89,33 +113,32 @@
 <div class="modal-overlay" *ngIf="showQuickAddModal">
   <div class="admin-card modal-content quick-add-modal">
     <h3>Novo zakazivanje</h3>
-
     <div class="form-group">
       <label class="input-label">Ime klijenta</label>
       <input
         type="text"
         [(ngModel)]="newBooking.name"
-        placeholder="Unesite ime..."
         class="admin-input-field"
+        placeholder="Unesite ime..."
       />
 
       <label class="input-label">Telefon (opciono)</label>
       <input
         type="tel"
         [(ngModel)]="newBooking.phone"
-        placeholder="06x..."
         class="admin-input-field"
+        placeholder="06x..."
       />
 
-      <label class="input-label">Email klijenta (opciono)</label>
+      <label class="input-label">Email (za obaveštenja)</label>
       <input
         type="email"
         [(ngModel)]="newBooking.email"
-        placeholder="klijent@mail.com"
         class="admin-input-field"
+        placeholder="klijent@mail.com"
       />
 
-      <label class="input-label">Izaberi vrijeme</label>
+      <label class="input-label">Izaberi vreme</label>
       <div class="time-grid">
         <button
           *ngFor="let t of filteredAvailableTimes"
@@ -139,7 +162,6 @@
         </button>
       </div>
     </div>
-
     <div class="modal-actions">
       <button class="action-btn cancel" (click)="closeQuickAdd()">
         Odustani
@@ -156,8 +178,8 @@
   [class.show]="notification.show"
   [class.error]="notification.type === 'error'"
 >
-  <span class="toast-icon">
-    {{ notification.type === "success" ? "✅" : "❌" }}
-  </span>
+  <span class="toast-icon">{{
+    notification.type === "success" ? "✅" : "❌"
+  }}</span>
   <span class="toast-msg">{{ notification.message }}</span>
 </div>

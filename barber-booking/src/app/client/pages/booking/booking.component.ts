@@ -8,6 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookingService } from '../../../core/services/booking.service';
+import { collection, Firestore, getDocs } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-booking',
@@ -17,15 +18,13 @@ import { BookingService } from '../../../core/services/booking.service';
   styleUrls: ['./booking.component.scss'],
 })
 export class BookingComponent implements OnInit, OnDestroy {
-  /* ---------- DATUMI ---------- */
   availableDates: string[] = [];
-  selectedDate!: string;
-  private checkDayTimer: any;
+  selectedDate: string = ''; // Inicijalno prazno, popunjava se u ngOnInit
+  private refreshInterval: any;
   private midnightCheck: any;
   private lastCheckedDate: string = new Date().toDateString();
-  today = new Date(); // Dodaj ovo u klasu komponente
+  today = new Date();
 
-  /* ---------- TERMINI ---------- */
   allTimes: string[] = [
     '09:00',
     '09:30',
@@ -49,7 +48,6 @@ export class BookingComponent implements OnInit, OnDestroy {
   bookedTimes: string[] = [];
   selectedTime: string | null = null;
 
-  /* ---------- USLUGE ---------- */
   services = [
     { label: 'Šišanje', value: 'sisanje', selected: false },
     { label: 'Brijanje', value: 'brijanje', selected: false },
@@ -57,106 +55,114 @@ export class BookingComponent implements OnInit, OnDestroy {
     { label: 'Trimovanje', value: 'trimovanje', selected: false },
   ];
 
-  /* ---------- PODACI KORISNIKA ---------- */
   name = '';
   phone = '';
   email = '';
-
-  /* ---------- UI STATE ---------- */
   loading = false;
   errorMessage = '';
   successMessage = '';
-  private refreshInterval: any;
 
   constructor(
     private bookingService: BookingService,
     private cdr: ChangeDetectorRef,
+    private firestore: Firestore,
   ) {}
 
-  /* ---------- INIT ---------- */
-  ngOnInit(): void {
-    this.generateDates();
-    this.selectedDate = this.availableDates[0]; // default = danas
-    this.loadBookedTimes();
-    this.bookingService.cleanupOldBookings(); // Čistimo stare rezervacije pri pokretanju aplikacije
+  async ngOnInit() {
+    // 1. Prvo generiši datume i čekaj da završi
+    await this.generateDates();
+
+    // 2. Postavi prvi dostupni datum kao selektovan
+    if (this.availableDates.length > 0) {
+      this.selectedDate = this.availableDates[0];
+      // 3. Odmah učitaj termine za taj datum
+      await this.loadBookedTimes();
+    }
+
+    this.bookingService.cleanupOldBookings();
 
     this.refreshInterval = setInterval(() => {
       this.loadBookedTimes();
     }, 30000);
 
     this.setupMidnightTimer();
-    this.onWindowFocus(); // Proveri odmah pri učitavanju da li je dan promenjen (npr. ako je korisnik ostavio stranicu otvorenu preko ponoći)
   }
 
   ngOnDestroy(): void {
-    // Važno: Ugasi interval kada korisnik napusti stranicu
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
-    if (this.checkDayTimer) clearInterval(this.checkDayTimer);
+    if (this.refreshInterval) clearInterval(this.refreshInterval);
+    if (this.midnightCheck) clearInterval(this.midnightCheck);
   }
 
-  /* ---------- GENERIŠI DANAS + NAREDNA 2 ---------- */
-  generateDates() {
-    const newDates: string[] = [];
-    let tempDate = new Date();
-    const targetCount = 3;
+  async generateDates() {
+    try {
+      const newDates: string[] = [];
+      let tempDate = new Date();
 
-    // Osiguravamo da radimo sa čistim datumom bez minuta/sekundi
-    tempDate.setHours(0, 0, 0, 0);
+      // Povuci neradne dane iz servisa (bolja praksa)
+      const bannedDates = await this.bookingService.getDayOffs();
 
-    while (newDates.length < targetCount) {
-      const dayOfWeek = tempDate.getDay();
+      tempDate.setHours(0, 0, 0, 0);
 
-      if (dayOfWeek !== 0 && dayOfWeek !== 1) {
-        // 'sv-SE' format daje tačno YYYY-MM-DD u lokalnom vremenu
+      // Tražimo naredna 3 radna dana koji nisu na crnoj listi
+      while (newDates.length < 3) {
         const dateStr = tempDate.toLocaleDateString('sv-SE');
-        newDates.push(dateStr);
+        const dayOfWeek = tempDate.getDay();
+
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 1; // Nedelja i Ponedeljak neradni
+        const isBanned = bannedDates.includes(dateStr);
+
+        if (!isWeekend && !isBanned) {
+          newDates.push(dateStr);
+        }
+        tempDate.setDate(tempDate.getDate() + 1);
       }
-      tempDate.setDate(tempDate.getDate() + 1);
+
+      this.availableDates = [...newDates];
+      this.cdr.detectChanges();
+    } catch (err) {
+      console.error('Greška kod generisanja datuma:', err);
     }
-
-    this.availableDates = [...newDates]; // Menjamo referencu niza
-
-    // Provera da li je stari selectedDate i dalje validan
-    if (
-      !this.selectedDate ||
-      !this.availableDates.includes(this.selectedDate)
-    ) {
-      this.selectedDate = this.availableDates[0];
-      this.onDateChange();
-    }
-
-    this.cdr.detectChanges(); // Forsiraj osvežavanje ekrana
   }
 
-  /* ---------- PROMJENA DATUMA ---------- */
   async onDateChange() {
     this.selectedTime = null;
     await this.loadBookedTimes();
   }
 
-  setupMidnightTimer() {
-    if (this.midnightCheck) clearInterval(this.midnightCheck);
-
-    this.midnightCheck = setInterval(() => {
-      this.checkAndRefreshDate();
-    }, 30000); // Proveravaj na svakih 30 sekundi
-  }
-
-  /* ---------- UČITAJ ZAUZETE TERMINE ---------- */
   async loadBookedTimes() {
+    if (!this.selectedDate) return;
     this.bookedTimes = await this.bookingService.getBookedTimesForDate(
       this.selectedDate,
     );
   }
 
-  /* ---------- DA LI JE TERMIN ZAUZET ---------- */
-  isTimeBooked(time: string): boolean {
-    return this.bookedTimes.includes(time);
+  // Getter koji filtrira termine za prikaz (vodi računa o trenutnom vremenu ako je "danas")
+  get filteredTimes(): string[] {
+    if (!this.selectedDate) return [];
+
+    const now = new Date();
+    const selectedDateObj = new Date(this.selectedDate);
+    const todayStr = now.toLocaleDateString('sv-SE');
+
+    // Ako datum nije danas, vrati sve termine
+    if (this.selectedDate !== todayStr) {
+      return this.allTimes;
+    }
+
+    // Ako je danas, filtriraj prošle termine (+15 min lufta)
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    return this.allTimes.filter((time) => {
+      const [hour, minute] = time.split(':').map(Number);
+      if (hour > currentHour) return true;
+      if (hour === currentHour && minute > currentMinute + 15) return true;
+      return false;
+    });
   }
 
-  /* ---------- ODABIR TERMINA ---------- */
+  /* --- OSTATAK LOGIKE (selectTime, submitBooking, itd.) OSTAJE ISTI --- */
+
   selectTime(time: string) {
     if (this.selectedTime === time) {
       this.selectedTime = null;
@@ -165,7 +171,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* ---------- CHECKBOX USLUGE ---------- */
   toggleService(service: any) {
     service.selected = !service.selected;
   }
@@ -174,7 +179,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     return this.services.filter((s) => s.selected).map((s) => s.label);
   }
 
-  /* ---------- SUBMIT ---------- */
   async submitBooking() {
     this.errorMessage = '';
     this.successMessage = '';
@@ -184,24 +188,16 @@ export class BookingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.name.trim() || !this.phone.trim()) {
-      this.errorMessage = 'Unesi ime i broj telefona';
-      return;
-    }
-
-    if (!this.email.trim() || !this.isValidEmail(this.email)) {
-      this.errorMessage = 'Unesi validan email';
-      return;
-    }
-
-    const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
-    if (this.phone.trim().length < 9 || !phoneRegex.test(this.phone)) {
-      this.errorMessage = 'Unesite ispravan broj telefona (min. 9 cifara)';
+    if (
+      !this.name.trim() ||
+      !this.phone.trim() ||
+      !this.isValidEmail(this.email)
+    ) {
+      this.errorMessage = 'Proverite unos podataka';
       return;
     }
 
     this.loading = true;
-
     try {
       const isAvailable = await this.bookingService.isSlotAvailable(
         this.selectedDate,
@@ -209,7 +205,6 @@ export class BookingComponent implements OnInit, OnDestroy {
       );
       if (!isAvailable) {
         this.errorMessage = 'Termin je upravo zauzet 😕';
-        this.loading = false;
         return;
       }
 
@@ -222,23 +217,17 @@ export class BookingComponent implements OnInit, OnDestroy {
         email: this.email,
       });
 
-      // Postavljamo poruku koja će aktivirati success ekran
       this.successMessage =
-        'Poslali smo ti link za potvrdu na ' +
-        this.email +
-        '. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.';
-
-      this.resetForm(); // Čistimo polja za sledeći put
+        'Potvrdite termin putem emaila koji smo vam poslali!';
+      this.resetForm();
     } catch (error) {
-      this.errorMessage =
-        'Došlo je do greške prilikom čuvanja. Pokušajte ponovo.';
+      this.errorMessage = 'Greška pri čuvanju.';
     } finally {
       this.loading = false;
+      await this.loadBookedTimes();
     }
-    await this.loadBookedTimes();
   }
 
-  /* ---------- RESET ---------- */
   resetForm() {
     this.selectedTime = null;
     this.name = '';
@@ -251,48 +240,30 @@ export class BookingComponent implements OnInit, OnDestroy {
     return /\S+@\S+\.\S+/.test(email);
   }
 
-  get filteredTimes(): string[] {
-    const now = new Date();
-    const selectedDateObj = new Date(this.selectedDate);
-    const today = new Date();
-
-    // Resetujemo sate na 0 da uporedimo samo datume
-    today.setHours(0, 0, 0, 0);
-    selectedDateObj.setHours(0, 0, 0, 0);
-
-    // Ako izabrani datum nije danas (već sutra/prekosutra), prikaži sve termine
-    if (selectedDateObj.getTime() !== today.getTime()) {
-      return this.allTimes;
-    }
-
-    // Ako je danas, filtriraj one koji su prošli
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-
-    return this.allTimes.filter((time) => {
-      const [hour, minute] = time.split(':').map(Number);
-      // Prikazujemo termine koji su barem 15 minuta ispred trenutnog vremena
-      // (Dajemo korisniku malo vremena da popuni formu)
-      if (hour > currentHour) return true;
-      if (hour === currentHour && minute > currentMinute + 15) return true;
-      return false;
-    });
-  }
-
   @HostListener('window:focus')
   onWindowFocus() {
     this.checkAndRefreshDate();
   }
 
-  // Pomoćna funkcija da se ne ponavlja kod
-  private checkAndRefreshDate() {
+  setupMidnightTimer() {
+    this.midnightCheck = setInterval(() => this.checkAndRefreshDate(), 60000);
+  }
+
+  private async checkAndRefreshDate() {
     const todayStr = new Date().toDateString();
     if (this.lastCheckedDate !== todayStr) {
-      console.log('Novi dan detektovan!');
       this.lastCheckedDate = todayStr;
-      this.today = new Date(); // Osveži "Danas" marker
-      this.generateDates();
+      await this.generateDates();
+      if (!this.availableDates.includes(this.selectedDate)) {
+        this.selectedDate = this.availableDates[0];
+        await this.loadBookedTimes();
+      }
       this.cdr.detectChanges();
     }
+  }
+
+  /* ---------- DA LI JE TERMIN ZAUZET ---------- */
+  isTimeBooked(time: string): boolean {
+    return this.bookedTimes.includes(time);
   }
 }
