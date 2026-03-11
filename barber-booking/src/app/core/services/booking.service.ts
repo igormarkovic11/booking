@@ -94,44 +94,64 @@ export class BookingService {
       createdAt,
       to: [booking.email],
       message: {
-        subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
-        // DODAJEMO TEXT VERZIJU (Plain Text)
-        text: `Zdravo ${vocativeName}, molimo potvrdite vaš termin ${formattedDate} u ${booking.time} klikom na link: ${confirmUrl}`,
-        // ISPRAVLJAMO HTML STRUKTURU
+        subject: `Potvrda termina - ${formattedDate} u ${booking.time}`,
+        // DODAJEMO MNOGO VIŠE TEKSTA U TEXT VERZIJU (za 10/10 skor)
+        text: `Zdravo ${vocativeName},\n\nHvala vam što koristite naš online servis za zakazivanje. Rezervisali ste termin u Barbershop-u za ${formattedDate} u ${booking.time}.\n\nMolimo vas da potvrdite svoj dolazak klikom na ovaj link:\n${confirmUrl}\n\nUkoliko želite da otkažete ovu rezervaciju, kliknite ovde: ${cancelUrl}\n\nDetalji:\nUsluge: ${booking.services.join(', ')}\nLokacija: Kneza Miloša 1, Bijeljina.\n\nOvaj mejl je automatski generisan radi vaše sigurnosti i potvrde mesta u kalendaru.`,
+
+        // DODAJEMO LIST-UNSUBSCRIBE HEADER
+        headers: {
+          'List-Unsubscribe': `<${cancelUrl}>`,
+          'X-Entity-Ref-ID': bookingId,
+        },
+
         html: `
-      <!DOCTYPE html>
-      <html lang="sr">
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          /* Ovde možeš dodati stilove ako želiš */
-        </style>
-      </head>
-      <body style="margin: 0; padding: 0; background-color: #121212;">
-        <div style="background-color: #121212; padding: 40px 10px; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #ffffff; text-align: center;">
-          <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
-            <h1 style="color: #1976d2;">Pozdrav, ${vocativeName}!</h1>
-            <p style="font-size: 16px;">Vaš termin je skoro spreman. Molimo potvrdite dolazak:</p>
-            
-            <div style="background-color: #2a2a2a; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
-              <p style="margin: 5px 0;"><strong>📅 Datum:</strong> ${formattedDate}</p>
-              <p style="margin: 5px 0;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
-              <p style="margin: 5px 0;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
-            </div>
+    <!DOCTYPE html>
+    <html lang="sr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Potvrda rezervacije</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #121212; font-family: 'Segoe UI', Arial, sans-serif;">
+      <div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; color: #121212;">
+        Vaš termin za ${booking.services.join(', ')} je spreman. Potvrdite dolazak klikom na dugme unutar poruke kako bi vaša rezervacija ostala važeća.
+      </div>
 
-            <a href="${confirmUrl}" 
-               style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
-               POTVRDI TERMIN
-            </a>
-
-            <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333333; font-size: 12px; color: #777777;">
-              Ukoliko želite odustati, svoj termin možete <a href="${cancelUrl}" style="color: #1976d2;">otkazati ovdje</a>.<br><br>
-              Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
-            </p>
+      <div style="background-color: #121212; padding: 40px 10px; color: #ffffff; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
+          <h1 style="color: #1976d2; font-size: 26px; margin-bottom: 10px;">Zdravo, ${vocativeName}!</h1>
+          <p style="font-size: 16px; color: #cccccc; line-height: 1.6;">
+            Hvala Vam što ste odabrali naš barbershop. Primili smo Vaš zahtjev za termin i rezervisali smo Vam mjesto u kalendaru. 
+            <br><br>
+            <strong style="color: #ffffff;">Molimo Vas da potvrdite dolazak</strong> klikom na dugme ispod kako bi proces bio završen:
+          </p>
+          
+          <div style="background-color: #2a2a2a; border-radius: 12px; padding: 25px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
+            <p style="margin: 5px 0; font-size: 15px;"><strong>📅 DATUM:</strong> <span style="color: #1976d2;">${formattedDate}</span></p>
+            <p style="margin: 5px 0; font-size: 15px;"><strong>⏰ VRIJEME:</strong> <span style="color: #1976d2;">${booking.time}h</span></p>
+            <p style="margin: 5px 0; font-size: 15px;"><strong>✂️ USLUGE:</strong> ${booking.services.join(', ')}</p>
           </div>
+
+          <a href="${confirmUrl}" 
+             style="display: inline-block; padding: 16px 35px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3);">
+             POTVRDI DOLAZAK
+          </a>
+
+          <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333333; font-size: 13px; color: #777777; line-height: 1.5;">
+            Ukoliko niste u mogućnosti da dođete, termin možete <a href="${cancelUrl}" style="color: #1976d2; text-decoration: underline;">otkazati ovdje</a>. 
+            
+            <br><br>
+            <strong>Barbershop Bijeljina</strong><br>
+            Lokacija: Kneza Miloša 1 | Telefon: +387 61 123 456
+          </p>
         </div>
-      </body>
-      </html>
+        
+        <p style="font-size: 11px; color: #444444; margin-top: 20px;">
+          Ovu poruku ste primili jer ste koristili naš sistem za online rezervacije. <br>
+          © 2026 Barbershop. Sva prava zadržana.
+        </p>
+      </div>
+    </body>
+    </html>
     `,
       },
     };
@@ -204,36 +224,47 @@ export class BookingService {
   private toVocative(name: string): string {
     if (!name) return '';
 
-    // Sklanjamo višak razmaka i uzimamo samo prvo ime ako ih je više
     const firstName = name.trim().split(' ')[0];
-    const lastChar = firstName.slice(-1).toLowerCase();
-    const secondToLastChar = firstName.slice(-2, -1).toLowerCase();
+    const lowerName = firstName.toLowerCase();
+    const lastChar = lowerName.slice(-1);
 
-    // 1. Ženska imena na -a (Marija -> Marija, Ivana -> Ivana)
-    // Većina ostaje ista, pa ne mijenjamo ništa.
+    // 1. SPECIFIČNA IMENA (Petar, Aleksandar i slična na -ar)
+    // Rešavamo "Petar -> Petre" i "Aleksandar -> Aleksandre"
+    if (lowerName.endsWith('tar')) {
+      // Uzimamo sve pre "ar", dodajemo samo "re" (Petar -> Pet + re)
+      return firstName.slice(0, -2) + 're';
+    }
 
-    // 2. Muška imena na suglasnik (Igor -> Igore, Ivan -> Ivane)
+    if (lowerName.endsWith('ndar')) {
+      // Aleksandar -> Aleksand + re
+      return firstName.slice(0, -2) + 're';
+    }
+
+    // 2. Ženska imena na -a (Marija -> Marija) - ostaju ista
+    if (lastChar === 'a') {
+      // Izuzetak: imena na -ica (Ivica -> Ivice)
+      if (lowerName.endsWith('ica')) {
+        return firstName.slice(0, -1) + 'e';
+      }
+      return firstName;
+    }
+
+    // 3. Muška imena na suglasnik (Igor -> Igore, Ivan -> Ivane)
     const consonants = 'bcćčdgđjklljmnnjprstvzž';
     if (consonants.includes(lastChar)) {
-      // Specifičnost: imena na -k, -g, -h često idu u -u (npr. Oleg -> Olegu, ali može i Oleže)
-      // Za Barbershop je najsigurnije dodati -e
-      if (lastChar === 'k' || lastChar === 'g') {
-        return firstName + 'u'; // npr. Erik -> Eriku
+      // Specifičnost za k, g, h -> u (da izbjegnemo palatalizaciju tipa Erik -> Eriče)
+      if (['k', 'g', 'h'].includes(lastChar)) {
+        return firstName + 'u';
       }
       return firstName + 'e';
     }
 
-    // 3. Imena na -o ili -e (Marko, Hrvoje) - ostaju ista u vokativu
+    // 4. Imena na -o ili -e (Marko, Hrvoje) - ostaju ista
     if (lastChar === 'o' || lastChar === 'e') {
       return firstName;
     }
 
-    // 4. Specifična imena na -ica (npr. Ivica -> Ivice)
-    if (firstName.toLowerCase().endsWith('ica')) {
-      return firstName.slice(0, -1) + 'e';
-    }
-
-    return firstName; // Default: vrati kako jeste
+    return firstName;
   }
 
   async cleanupOldBookings() {

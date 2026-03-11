@@ -6,9 +6,14 @@ import {
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 
+import {
+  initializeFirestore,
+  provideFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from '@angular/fire/firestore';
 import { routes } from './app.routes';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { environment } from './environments/environment';
 import { registerLocaleData } from '@angular/common'; // Ovo je ključno
@@ -22,7 +27,15 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideFirestore(() => getFirestore()),
+    provideFirestore(() => {
+      const app = initializeApp(environment.firebase);
+      return initializeFirestore(app, {
+        // Koristimo persistentLocalCache sa menadžerom za više tabova
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+    }),
     provideAnimationsAsync(),
     { provide: LOCALE_ID, useValue: 'sr-Latn' }, // Postavljamo srpski kao glavni jezik
   ],

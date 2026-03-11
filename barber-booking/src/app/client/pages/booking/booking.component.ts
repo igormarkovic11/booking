@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookingService } from '../../../core/services/booking.service';
 import { collection, Firestore, getDocs } from '@angular/fire/firestore';
+import { fromEvent } from 'rxjs'; // Uvezi ovo iz rxjs
 
 @Component({
   selector: 'app-booking',
@@ -69,24 +70,35 @@ export class BookingComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    // 1. Pokreni čišćenje u pozadini (ne blokiraj korisnika)
+    // 1. Čišćenje starih termina
     this.bookingService.cleanupOldBookings();
 
-    // 2. Generiši datume odmah
-    // await ovde osigurava da imamo datume pre nego što tražimo termine
+    // 2. Generiši datume
     await this.generateDates();
 
-    // 3. Postavi inicijalni datum
+    // 3. Postavi inicijalni datum i učitaj termine
     if (this.availableDates.length > 0) {
       this.selectedDate = this.availableDates[0];
-
-      // 4. Učitaj zauzete termine, ali bez 'await' ako želiš da se UI odmah pojavi
-      // (Dugmići će biti slobodni dok se podaci ne učitaju, ili dodaj loading na njih)
       this.loadBookedTimes();
     }
 
+    // 4. Standardni intervali
     this.refreshInterval = setInterval(() => this.loadBookedTimes(), 30000);
     this.setupMidnightTimer();
+
+    // 5. Visibility listener - Pametno osvježavanje
+    fromEvent(document, 'visibilitychange').subscribe(() => {
+      if (document.visibilityState === 'visible') {
+        console.log('Korisnik se vratio, osvježavam podatke...');
+
+        // Osvježavamo termine za trenutno selektovani datum
+        if (this.selectedDate) {
+          this.loadBookedTimes();
+          // Opciono: ako se datum promijenio dok je bio u pozadini (prošla ponoć)
+          this.generateDates();
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
