@@ -13,12 +13,14 @@ import {
   setDoc,
   getDoc,
 } from '@angular/fire/firestore';
+import { BookingService } from './booking.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
   private firestore = inject(Firestore);
+  private bookingService = inject(BookingService); // Ubaci BookingService
   private bookingsRef = collection(this.firestore, 'bookings');
 
   /* DOHVATI REZERVACIJE */
@@ -126,19 +128,14 @@ export class AdminService {
     }
   }
 
-  /* NERADNI DANI LOGIKA */
+  /* NERADNI DANI - Koristimo BookingService radi keširanja */
   async checkIfDayOff(date: string): Promise<boolean> {
-    const docRef = doc(this.firestore, `dayoffs/${date}`);
-    const docSnap = await getDoc(docRef);
-    return docSnap.exists();
+    const dayOffs = await this.bookingService.getDayOffs();
+    return dayOffs.includes(date);
   }
 
   async toggleDayOff(date: string, shouldBeOff: boolean) {
-    const docRef = doc(this.firestore, `dayoffs/${date}`);
-    if (shouldBeOff) {
-      await setDoc(docRef, { date, status: 'off', createdAt: new Date() });
-    } else {
-      await deleteDoc(docRef);
-    }
+    // Pozivamo metodu iz BookingService-a jer ona brine o bazi I o kešu
+    await this.bookingService.toggleDayOff(date, shouldBeOff);
   }
 }
