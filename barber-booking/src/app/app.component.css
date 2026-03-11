@@ -12,11 +12,12 @@
 .app-background::before {
   content: "";
   position: fixed;
-  top: -20px;
-  bottom: -20px;
-  left: -20px;
-  right: -20px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 
+  /* Zadržavamo spojeni overlay i sliku radi boljih performansi */
   background:
     linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
     url("/assets/images/background.jpg");
@@ -26,10 +27,9 @@
   background-repeat: no-repeat;
   z-index: -1;
 
-  /* DODAJ OVO - rješava poskakivanje */
+  /* Ovo ostavi - pomaže da slika ne "treperi" dok skroluješ */
   will-change: transform;
   transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .content {
