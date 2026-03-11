@@ -12,8 +12,6 @@ body {
   margin: 0;
   padding: 0;
   background-color: #0c0c0c !important;
-  /* Vraćamo prirodan osjećaj skrola */
-  -webkit-overflow-scrolling: touch;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
 }
