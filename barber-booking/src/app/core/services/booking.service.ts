@@ -271,14 +271,22 @@ export class BookingService {
   }
 
   /* ---------- DOHVATI SVE RUČNO ZATVORENE DANE ---------- */
-  async getDayOffs(): Promise<string[]> {
-    const dayOffsRef = collection(this.firestore, 'dayoffs');
-    const snapshot = await getDocs(dayOffsRef);
-    // Vraća niz stringova u formatu 'YYYY-MM-DD'
-    return snapshot.docs.map((doc) => doc.id);
+  private cachedDayOffs: string[] | null = null;
+
+  // Metoda za čišćenje keša koju zoveš iz admina
+  clearDayOffsCache() {
+    this.cachedDayOffs = null;
   }
 
-  /* ---------- METODA ZA ADMINA (da zatvori/otvori dan) ---------- */
+  async getDayOffs(): Promise<string[]> {
+    if (this.cachedDayOffs) return this.cachedDayOffs;
+
+    const dayOffsRef = collection(this.firestore, 'dayoffs');
+    const snapshot = await getDocs(dayOffsRef);
+    this.cachedDayOffs = snapshot.docs.map((doc) => doc.id);
+    return this.cachedDayOffs;
+  }
+
   async toggleDayOff(date: string, isOff: boolean) {
     const docRef = doc(this.firestore, `dayoffs/${date}`);
     if (isOff) {
@@ -286,5 +294,7 @@ export class BookingService {
     } else {
       await deleteDoc(docRef);
     }
+    // ODMAH očisti keš da bi sledeći upit povukao nove podatke
+    this.clearDayOffsCache();
   }
 }

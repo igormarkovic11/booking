@@ -1,7 +1,13 @@
 <div class="booking-page">
-  <div class="booking-card">
-    <h2>Zakaži termin</h2>
+  <div class="booking-card" [class.ready]="availableDates.length > 0">
+    <div *ngIf="availableDates.length === 0" class="loader-container">
+      <div class="spinner"></div>
+      <p>Učitavanje...</p>
+    </div>
 
+    <div *ngIf="availableDates.length > 0" class="content-fade-in">
+      <h2>Zakaži termin</h2>
+    </div>
     <p class="step-instruction">Izaberi datum</p>
     <select
       [(ngModel)]="selectedDate"

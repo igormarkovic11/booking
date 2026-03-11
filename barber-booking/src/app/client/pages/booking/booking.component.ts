@@ -69,22 +69,23 @@ export class BookingComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    // 1. Prvo generiši datume i čekaj da završi
-    await this.generateDates();
-
-    // 2. Postavi prvi dostupni datum kao selektovan
-    if (this.availableDates.length > 0) {
-      this.selectedDate = this.availableDates[0];
-      // 3. Odmah učitaj termine za taj datum
-      await this.loadBookedTimes();
-    }
-
+    // 1. Pokreni čišćenje u pozadini (ne blokiraj korisnika)
     this.bookingService.cleanupOldBookings();
 
-    this.refreshInterval = setInterval(() => {
-      this.loadBookedTimes();
-    }, 30000);
+    // 2. Generiši datume odmah
+    // await ovde osigurava da imamo datume pre nego što tražimo termine
+    await this.generateDates();
 
+    // 3. Postavi inicijalni datum
+    if (this.availableDates.length > 0) {
+      this.selectedDate = this.availableDates[0];
+
+      // 4. Učitaj zauzete termine, ali bez 'await' ako želiš da se UI odmah pojavi
+      // (Dugmići će biti slobodni dok se podaci ne učitaju, ili dodaj loading na njih)
+      this.loadBookedTimes();
+    }
+
+    this.refreshInterval = setInterval(() => this.loadBookedTimes(), 30000);
     this.setupMidnightTimer();
   }
 
@@ -95,20 +96,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   async generateDates() {
     try {
+      const bannedDates = await this.bookingService.getDayOffs();
       const newDates: string[] = [];
       let tempDate = new Date();
-
-      // Povuci neradne dane iz servisa (bolja praksa)
-      const bannedDates = await this.bookingService.getDayOffs();
-
       tempDate.setHours(0, 0, 0, 0);
 
-      // Tražimo naredna 3 radna dana koji nisu na crnoj listi
       while (newDates.length < 3) {
         const dateStr = tempDate.toLocaleDateString('sv-SE');
         const dayOfWeek = tempDate.getDay();
-
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 1; // Nedelja i Ponedeljak neradni
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 1;
         const isBanned = bannedDates.includes(dateStr);
 
         if (!isWeekend && !isBanned) {
@@ -117,10 +113,11 @@ export class BookingComponent implements OnInit, OnDestroy {
         tempDate.setDate(tempDate.getDate() + 1);
       }
 
-      this.availableDates = [...newDates];
-      this.cdr.detectChanges();
+      this.availableDates = newDates;
+      // detectChanges je ok ovde, ali samo ako koristiš OnPush strategiju,
+      // inače ga slobodno obriši.
     } catch (err) {
-      console.error('Greška kod generisanja datuma:', err);
+      console.error('Greška:', err);
     }
   }
 
