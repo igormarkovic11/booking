@@ -3,11 +3,11 @@
 }
 
 html {
-  scroll-behavior: smooth;
-  /* Boja koja "viri" kad se skroluje preko ivica */
+  /* Dozvoljava prirodan skrol bez forsiranja visine */
+  height: -webkit-fill-available;
   background-color: #0c0c0c !important;
-  height: 100%;
-  /* Vrati ovo na auto ili skroz obriši da dozvoliš prirodan bounce */
+  scroll-behavior: smooth;
+  /* Vrati ovo na auto da se "smiri" browser */
   overscroll-behavior-y: auto;
 }
 
@@ -15,8 +15,10 @@ body {
   margin: 0;
   padding: 0;
   background-color: #0c0c0c !important;
-  /* Veoma bitno za mobilni Safari/Chrome momentum skrol */
-  -webkit-overflow-scrolling: touch;
+  /* Koristimo min-height umjesto height: 100% da izbjegnemo skakanje */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   width: 100%;
-  min-height: 100%;
+  /* Veoma bitno za glatkoću na iPhone-u */
+  -webkit-overflow-scrolling: touch;
 }

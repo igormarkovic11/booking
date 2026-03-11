@@ -12,13 +12,11 @@
 .app-background::before {
   content: "";
   position: fixed;
-  /* "Overscan" od 20px sa svih strana je sigurniji za jači skrol */
   top: -20px;
   bottom: -20px;
   left: -20px;
   right: -20px;
 
-  /* Redoslijed je bitan: Overlay ide PRVI, pa zarez, pa slika */
   background:
     linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
     url("/assets/images/background.jpg");
@@ -27,15 +25,16 @@
   background-position: center;
   background-repeat: no-repeat;
   z-index: -1;
-  /* Sada nam ::after više ne treba, pa ga možeš obrisati */
+
+  /* DODAJ OVO - rješava poskakivanje */
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .content {
-  flex: 1;
-  padding-top: 56px;
   position: relative;
-
-  /* Dozvoljavamo skrol unutar sadržaja */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  z-index: 1;
+  /* Nemoj stavljati overflow: hidden ovdje ako želiš prirodan skrol cijele strane */
+  width: 100%;
 }
