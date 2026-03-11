@@ -160,8 +160,13 @@ export class BookingComponent implements OnInit, OnDestroy {
       return false;
     });
   }
+  //  setupMidnightTimer() {
+  //     if (this.midnightCheck) clearInterval(this.midnightCheck);
 
-  /* --- OSTATAK LOGIKE (selectTime, submitBooking, itd.) OSTAJE ISTI --- */
+  //     this.midnightCheck = setInterval(() => {
+  //       this.checkAndRefreshDate();
+  //     }, 30000); // Proveravaj na svakih 30 sekundi
+  //   }
 
   selectTime(time: string) {
     if (this.selectedTime === time) {
@@ -183,31 +188,45 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.successMessage = '';
 
+    // 1. Osnovna validacija
     if (!this.selectedDate || !this.selectedTime) {
       this.errorMessage = 'Odaberi datum i termin';
       return;
     }
 
-    if (
-      !this.name.trim() ||
-      !this.phone.trim() ||
-      !this.isValidEmail(this.email)
-    ) {
-      this.errorMessage = 'Proverite unos podataka';
+    if (!this.name.trim() || !this.phone.trim()) {
+      this.errorMessage = 'Unesi ime i broj telefona';
       return;
     }
 
-    this.loading = true;
+    if (!this.email.trim() || !this.isValidEmail(this.email)) {
+      this.errorMessage = 'Unesi validan email';
+      return;
+    }
+
+    // 2. Validacija telefona (popravljen IF i dodat RETURN)
+    const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
+    if (this.phone.trim().length < 9 || !phoneRegex.test(this.phone)) {
+      this.errorMessage = 'Unesite ispravan broj telefona (min. 9 cifara)';
+      return; // <--- Ovo je falilo da ne krene dalje
+    }
+
+    this.loading = true; // <--- Sada je van IF-a, tamo gde treba da bude
+
     try {
+      // 3. Provera dostupnosti na serveru
       const isAvailable = await this.bookingService.isSlotAvailable(
         this.selectedDate,
         this.selectedTime!,
       );
+
       if (!isAvailable) {
         this.errorMessage = 'Termin je upravo zauzet 😕';
+        this.loading = false;
         return;
       }
 
+      // 4. Slanje rezervacije
       await this.bookingService.createBooking({
         date: this.selectedDate,
         time: this.selectedTime!,
@@ -217,11 +236,16 @@ export class BookingComponent implements OnInit, OnDestroy {
         email: this.email,
       });
 
+      // 5. Uspeh
       this.successMessage =
-        'Potvrdite termin putem emaila koji smo vam poslali!';
+        'Poslali smo ti link za potvrdu na ' +
+        this.email +
+        '. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.';
       this.resetForm();
     } catch (error) {
-      this.errorMessage = 'Greška pri čuvanju.';
+      console.error('Greška pri čuvanju:', error);
+      this.errorMessage =
+        'Došlo je do greške prilikom čuvanja. Pokušajte ponovo.';
     } finally {
       this.loading = false;
       await this.loadBookedTimes();

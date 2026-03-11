@@ -1,53 +1,53 @@
 <div class="booking-page">
   <div class="booking-card">
-    <h2 *ngIf="!successMessage">Zakaži termin</h2>
+    <h2>Zakaži termin</h2>
 
-    <div *ngIf="!successMessage">
-      <p class="step-instruction">Izaberi datum</p>
-      <select
-        [(ngModel)]="selectedDate"
-        (change)="onDateChange()"
-        class="date-dropdown"
+    <p class="step-instruction">Izaberi datum</p>
+    <select
+      [(ngModel)]="selectedDate"
+      (change)="onDateChange()"
+      class="date-dropdown"
+    >
+      <option *ngFor="let date of availableDates" [value]="date">
+        <ng-container *ngIf="date === (today | date: 'yyyy-MM-dd')">
+          Danas, {{ date | date: "dd.MM.yyyy." }}
+        </ng-container>
+        <ng-container *ngIf="date !== (today | date: 'yyyy-MM-dd')">
+          {{ date | date: "EEEE, dd.MM.yyyy." | titlecase }}
+        </ng-container>
+      </option>
+    </select>
+
+    <p class="step-instruction">Odaberite termin</p>
+    <div class="time-grid">
+      <button
+        *ngFor="let time of filteredTimes"
+        (click)="!isTimeBooked(time) && selectTime(time)"
+        [disabled]="isTimeBooked(time) || successMessage"
+        [class.active]="selectedTime === time"
+        [class.booked]="isTimeBooked(time)"
       >
-        <option *ngFor="let date of availableDates" [value]="date">
-          <ng-container *ngIf="date === (today | date: 'yyyy-MM-dd')">
-            Danas, {{ date | date: "dd.MM.yyyy." }}
-          </ng-container>
+        {{ time }}
+      </button>
+    </div>
 
-          <ng-container *ngIf="date !== (today | date: 'yyyy-MM-dd')">
-            {{ date | date: "EEEE, dd.MM.yyyy." | titlecase }}
-          </ng-container>
-        </option>
-      </select>
-
-      <p class="step-instruction">Odaberite termin</p>
-      <div class="time-grid">
-        <button
-          *ngFor="let time of filteredTimes"
-          (click)="!isTimeBooked(time) && selectTime(time)"
-          [disabled]="isTimeBooked(time)"
-          [class.active]="selectedTime === time"
-          [class.booked]="isTimeBooked(time)"
-        >
-          {{ time }}
-        </button>
+    <div class="services-box" [style.opacity]="successMessage ? '0.5' : '1'">
+      <p class="services-title">Koje usluge želiš? <span>(opciono)</span></p>
+      <div class="checkboxes">
+        <label *ngFor="let service of services" class="service-label">
+          <input
+            type="checkbox"
+            [checked]="service.selected"
+            (change)="toggleService(service)"
+            [disabled]="successMessage"
+          />
+          <span>{{ service.label }}</span>
+        </label>
       </div>
+    </div>
 
-      <div class="services-box">
-        <p class="services-title">Koje usluge želiš? <span>(opciono)</span></p>
-        <div class="checkboxes">
-          <label *ngFor="let service of services" class="service-label">
-            <input
-              type="checkbox"
-              [checked]="service.selected"
-              (change)="toggleService(service)"
-            />
-            <span>{{ service.label }}</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="input-group">
+    <div class="submission-area">
+      <div class="input-group" *ngIf="!successMessage">
         <input
           type="text"
           placeholder="Ime"
@@ -69,32 +69,32 @@
           class="custom-input"
           [disabled]="loading"
         />
+
+        <p *ngIf="errorMessage" class="error-text">{{ errorMessage }}</p>
+
+        <button
+          class="submit-btn"
+          (click)="submitBooking()"
+          [disabled]="
+            loading ||
+            !selectedTime ||
+            !name ||
+            !phone ||
+            !email ||
+            !isValidEmail(email)
+          "
+        >
+          <span *ngIf="!loading">Završi</span>
+          <span *ngIf="loading">Slanje...</span>
+        </button>
       </div>
 
-      <p *ngIf="errorMessage" class="error-text">{{ errorMessage }}</p>
-
-      <button
-        class="full-width submit-btn"
-        (click)="submitBooking()"
-        [disabled]="
-          loading ||
-          !selectedTime ||
-          !name ||
-          !phone ||
-          !email ||
-          !isValidEmail(email)
-        "
-      >
-        <span *ngIf="!loading">Završi</span>
-        <span *ngIf="loading">Slanje...</span>
-      </button>
-    </div>
-
-    <div *ngIf="successMessage" class="success-container">
-      <div class="success-icon">✉️</div>
-      <h2>Proveri svoj email</h2>
-      <p class="success-text">{{ successMessage }}</p>
-      <button class="submit-btn" (click)="successMessage = ''">Zatvori</button>
+      <div *ngIf="successMessage" class="inline-success-box">
+        <div class="success-icon">✉️</div>
+        <h3>Skoro gotovo!</h3>
+        <p class="success-text">{{ successMessage }}</p>
+        <button class="close-btn" (click)="successMessage = ''">U redu</button>
+      </div>
     </div>
   </div>
 </div>

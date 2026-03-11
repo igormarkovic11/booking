@@ -95,30 +95,43 @@ export class BookingService {
       to: [booking.email],
       message: {
         subject: `Potvrda termina: ${formattedDate} u ${booking.time}`,
+        // DODAJEMO TEXT VERZIJU (Plain Text)
+        text: `Zdravo ${vocativeName}, molimo potvrdite vaš termin ${formattedDate} u ${booking.time} klikom na link: ${confirmUrl}`,
+        // ISPRAVLJAMO HTML STRUKTURU
         html: `
-      <div style="background-color: #121212; padding: 40px 10px; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #ffffff; text-align: center;">
-        <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
-          
-          <h1 style="color: #1976d2; margin-top: 0;">Pozdrav, ${vocativeName}!</h1>
-          <p style="font-size: 16px; color: #eeeeee;">Vaš termin je skoro spreman. Molimo potvrdite dolazak:</p>
-          
-          <div style="background-color: #2a2a2a; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
-            <p style="margin: 5px 0; color: #ffffff;"><strong>📅 Datum:</strong> ${formattedDate}</p>
-            <p style="margin: 5px 0; color: #ffffff;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
-            <p style="margin: 5px 0; color: #ffffff;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
-          </div>
+      <!DOCTYPE html>
+      <html lang="sr">
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          /* Ovde možeš dodati stilove ako želiš */
+        </style>
+      </head>
+      <body style="margin: 0; padding: 0; background-color: #121212;">
+        <div style="background-color: #121212; padding: 40px 10px; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #ffffff; text-align: center;">
+          <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
+            <h1 style="color: #1976d2;">Pozdrav, ${vocativeName}!</h1>
+            <p style="font-size: 16px;">Vaš termin je skoro spreman. Molimo potvrdite dolazak:</p>
+            
+            <div style="background-color: #2a2a2a; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
+              <p style="margin: 5px 0;"><strong>📅 Datum:</strong> ${formattedDate}</p>
+              <p style="margin: 5px 0;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
+              <p style="margin: 5px 0;"><strong>✂️ Usluge:</strong> ${booking.services.join(', ')}</p>
+            </div>
 
-          <a href="${confirmUrl}" 
-             style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
-             POTVRDI TERMIN
-          </a>
+            <a href="${confirmUrl}" 
+               style="display: inline-block; padding: 14px 30px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
+               POTVRDI TERMIN
+            </a>
 
-          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333333; font-size: 12px; color: #777777;">
-            Ukoliko želite odustati, svoj termin možete <a href="${cancelUrl}" style="color: #1976d2; text-decoration: underline;">otkazati ovdje</a>.<br><br>
-            Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
+            <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #333333; font-size: 12px; color: #777777;">
+              Ukoliko želite odustati, svoj termin možete <a href="${cancelUrl}" style="color: #1976d2;">otkazati ovdje</a>.<br><br>
+              Ako niste vi napravili ovu rezervaciju, slobodno ignorišite ovaj email.
+            </p>
           </div>
         </div>
-      </div>
+      </body>
+      </html>
     `,
       },
     };
