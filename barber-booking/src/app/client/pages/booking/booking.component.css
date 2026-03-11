@@ -108,11 +108,11 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* hover efekt */
+/* hover efekt
 .time-grid button:hover {
   background: rgba(255, 255, 255, 0.18);
   transform: translateY(-1px);
-}
+} */
 
 /* CHECKBOXOVI */
 .services-box {
