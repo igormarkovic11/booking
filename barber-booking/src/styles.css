@@ -1,21 +1,22 @@
 * {
   box-sizing: border-box;
 }
+
 html {
   scroll-behavior: smooth;
+  /* Boja koja "viri" kad se skroluje preko ivica */
+  background-color: #0c0c0c !important;
+  height: 100%;
+  /* Vrati ovo na auto ili skroz obriši da dozvoliš prirodan bounce */
+  overscroll-behavior-y: auto;
 }
 
-html,
 body {
   margin: 0;
   padding: 0;
-  /* Ova boja mora biti ista kao tvoj overlay ili najtamniji dio slike */
   background-color: #0c0c0c !important;
-
-  /* Sprečava onaj gumeni skok cijele stranice na iOS-u */
-  overscroll-behavior-y: none;
-
-  /* Osigurava da je visina uvijek 100% */
-  height: 100%;
+  /* Veoma bitno za mobilni Safari/Chrome momentum skrol */
+  -webkit-overflow-scrolling: touch;
   width: 100%;
+  min-height: 100%;
 }
