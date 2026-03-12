@@ -1,5 +1,4 @@
 .services {
-  padding: 96px 16px 64px;
   text-align: center;
   color: white;
 }
@@ -28,7 +27,9 @@
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 24px 20px;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .service-card img {

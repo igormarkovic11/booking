@@ -53,15 +53,31 @@ export class BookingService {
 
   /* ---------- PROVJERA DOSTUPNOSTI ---------- */
   async isSlotAvailable(date: string, time: string): Promise<boolean> {
-    const q = query(
+    const now = new Date();
+    // Provjeri confirmed
+    const confirmedQuery = query(
       this.bookingsRef,
       where('date', '==', date),
       where('time', '==', time),
       where('status', '==', 'confirmed'),
     );
-
-    const snapshot = await getDocs(q);
-    return snapshot.empty;
+    const confirmedSnap = await getDocs(confirmedQuery);
+    if (!confirmedSnap.empty) return false;
+    // Provjeri pending koji još nisu istekli (< 15 min)
+    const pendingQuery = query(
+      this.bookingsRef,
+      where('date', '==', date),
+      where('time', '==', time),
+      where('status', '==', 'pending'),
+    );
+    const pendingSnap = await getDocs(pendingQuery);
+    for (const docSnap of pendingSnap.docs) {
+      const data = docSnap.data() as any;
+      const createdAt = data.createdAt?.toDate?.() ?? new Date();
+      const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
+      if (diffMinutes < 15) return false; // Neko već "drži" ovaj termin
+    }
+    return true;
   }
 
   /* ---------- KREIRAJ REZERVACIJU (Gmail-friendly verzija) ---------- */
@@ -185,33 +201,40 @@ export class BookingService {
     bookingId: string,
     token: string,
   ): Promise<
-    'success' | 'expired' | 'invalid_token' | 'not_found' | 'already_confirmed'
+    | 'success'
+    | 'expired'
+    | 'invalid_token'
+    | 'not_found'
+    | 'already_confirmed'
+    | 'slot_taken'
   > {
     const bookingRef = doc(this.firestore, `bookings/${bookingId}`);
     const snap = await getDoc(bookingRef);
-
     if (!snap.exists()) return 'not_found';
-
     const data: any = snap.data();
-
     if (data.status === 'confirmed') return 'already_confirmed';
-
     if (data.confirmationToken !== token) return 'invalid_token';
-
     const createdAt = data.createdAt?.toDate();
     const now = new Date();
-
     const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
-
     if (diffMinutes > 15) {
       await updateDoc(bookingRef, { status: 'expired' });
       return 'expired';
     }
-
-    await updateDoc(bookingRef, {
-      status: 'confirmed',
-      expireAt: null, // Trajno ostaje u bazi (dok ga ne obrišemo kao starog)
-    });
+    // *** NOVA PROVJERA: Da li je neko drugi već potvrdio ovaj termin? ***
+    const conflictQuery = query(
+      collection(this.firestore, 'bookings'),
+      where('date', '==', data.date),
+      where('time', '==', data.time),
+      where('status', '==', 'confirmed'),
+    );
+    const conflictSnap = await getDocs(conflictQuery);
+    if (!conflictSnap.empty) {
+      // Obriši ovu rezervaciju jer je termin zauzet
+      await updateDoc(bookingRef, { status: 'expired' });
+      return 'slot_taken';
+    }
+    await updateDoc(bookingRef, { status: 'confirmed', expireAt: null });
     return 'success';
   }
 
