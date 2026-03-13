@@ -18,6 +18,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { environment } from './environments/environment';
 import { registerLocaleData } from '@angular/common'; // Ovo je ključno
 import localeSr from '@angular/common/locales/sr-Latn'; // Srpska latinica
+import { getAuth, provideAuth } from '@angular/fire/auth';
 
 registerLocaleData(localeSr); // Registrujemo srpski
 
@@ -26,6 +27,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),
+    provideAuth(() => getAuth()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFirestore(() => {
       const app = initializeApp(environment.firebase);

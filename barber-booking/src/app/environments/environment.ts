@@ -10,5 +10,5 @@ export const environment = {
     measurementId: 'G-XSD8CDL4CX',
   },
   adminEmail: 'imarkovic132@gmail.com',
-  adminPassword: 'Traktorskaguma123',
+  adminSecret: 'Barbershop#HB',
 };

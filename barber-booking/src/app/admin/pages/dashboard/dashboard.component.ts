@@ -17,6 +17,8 @@ import {
   ToastState,
 } from '../../../shared/toast/toast.component';
 import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -35,6 +37,8 @@ import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private adminService = inject(AdminService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   bookings: Booking[] = [];
   selectedDay = new Date().toISOString().split('T')[0];
@@ -198,5 +202,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   showToast(message: string, type: 'success' | 'error' = 'success'): void {
     this.toast = { show: true, message, type };
     setTimeout(() => (this.toast.show = false), 3000);
+  }
+
+  async logout(): Promise<void> {
+    await this.authService.logout();
+    this.router.navigate(['/admin/login']);
   }
 }

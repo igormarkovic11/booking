@@ -8,6 +8,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Auth, signInAnonymously } from '@angular/fire/auth';
 import {
   Firestore,
   collection,
@@ -91,10 +92,17 @@ export class BookingComponent implements OnInit, OnDestroy {
   constructor(
     private bookingService: BookingService,
     private firestore: Firestore,
+    private auth: Auth,
     private cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit(): Promise<void> {
+    // Sign in anonymously so Firestore rules allow booking creation
+    // This is invisible to the user — no login screen, no prompt
+    await signInAnonymously(this.auth).catch((err) =>
+      console.error('Anonymous sign-in failed:', err),
+    );
+
     this.bookingService.cleanupOldBookings();
     await this.generateDates();
 
@@ -110,12 +118,11 @@ export class BookingComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.snapshotUnsub?.();
     clearInterval(this.midnightInterval);
-    this.visibilitySub?.unsubscribe();
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   /* ---------- REAL-TIME LISTENER ---------- */
   private subscribeToBookedTimes(): void {
-    // Unsubscribe from previous date before subscribing to new one
     this.snapshotUnsub?.();
 
     const q = query(
@@ -141,23 +148,18 @@ export class BookingComponent implements OnInit, OnDestroy {
         })
         .filter((t): t is string => t !== null);
 
-      // OnPush: manually trigger change detection since data arrived from outside Angular
       this.cdr.markForCheck();
     });
   }
 
-  /* ---------- VISIBILITY LISTENER (pause when hidden) ---------- */
+  /* ---------- VISIBILITY LISTENER ---------- */
   private setupVisibilityListener(): void {
     document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   private onVisibilityChange = async (): Promise<void> => {
     if (document.visibilityState !== 'visible') return;
-
-    // Re-subscribe in case connection dropped while hidden
-    if (this.selectedDate) {
-      this.subscribeToBookedTimes();
-    }
+    if (this.selectedDate) this.subscribeToBookedTimes();
     await this.generateDates();
     this.cdr.markForCheck();
   };
@@ -188,7 +190,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   async onDateChanged(date: string): Promise<void> {
     this.selectedDate = date;
     this.selectedTime = null;
-    this.subscribeToBookedTimes(); // re-subscribe for the new date
+    this.subscribeToBookedTimes();
   }
 
   /* ---------- TERMINI ---------- */
@@ -279,7 +281,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.successMessage = '';
   }
 
-  /* ---------- POMOĆNE METODE ---------- */
   get canSubmit(): boolean {
     return !!this.selectedTime;
   }

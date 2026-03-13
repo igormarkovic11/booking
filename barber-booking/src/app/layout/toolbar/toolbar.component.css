@@ -30,6 +30,7 @@
   display: none;
 }
 
+/* MOBILE MENU */
 .mobile-menu {
   position: fixed;
   top: 56px;
@@ -78,6 +79,7 @@
   border-radius: 6px;
 }
 
+/* LOGO */
 .logo {
   font-weight: 600;
   font-size: 1rem;
@@ -85,21 +87,21 @@
 
 .logo-link {
   display: flex;
-  align-items: center; /* Centriranje loga i teksta vertikalno */
+  align-items: center;
   text-decoration: none;
   color: inherit;
-  gap: 10px; /* Razmak između slike loga i teksta "Barber Shop" */
+  gap: 10px;
 }
 
 .nav-logo {
-  height: 35px; /* Dovoljno malo da stane u toolbar od 56px */
+  height: 35px;
   width: auto;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
   transition: transform 0.2s ease;
 }
 
 .logo-link:hover .nav-logo {
-  transform: scale(1.1); /* Suptilni efekat na hover cijelog linka */
+  transform: scale(1.1);
 }
 
 .spacer {
@@ -115,6 +117,54 @@
 /* BOOKING BUTTON */
 .booking-btn {
   margin-left: 16px;
+}
+
+/* LOGOUT BUTTON (desktop) */
+.logout-btn {
+  margin-left: 12px;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &:hover {
+    color: #ff5252 !important;
+    border-color: rgba(255, 82, 82, 0.4) !important;
+  }
+}
+
+/* LOGOUT BUTTON (mobile) */
+.logout-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: 8px;
+  color: #ff5252;
+  padding: 10px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s ease;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  &:hover {
+    background: rgba(255, 82, 82, 0.1);
+  }
 }
 
 /* DESKTOP */
@@ -134,6 +184,10 @@
     display: none;
   }
 
+  .logout-btn {
+    display: none;
+  }
+
   .menu-btn {
     display: block;
   }
@@ -141,6 +195,6 @@
 
 @media (max-width: 400px) {
   .logo {
-    display: none; /* Sakrij tekst na baš malim ekranima, ostavi samo logo */
+    display: none;
   }
 }
