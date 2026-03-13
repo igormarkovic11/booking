@@ -1,5 +1,5 @@
 <div class="admin-page">
-  <div class="admin-card main-panel">
+  <div class="admin-card">
     <div class="admin-header">
       <div class="top-row">
         <h2>Pregled termina</h2>
@@ -22,16 +22,11 @@
       </div>
 
       <div class="date-row">
-        <div class="date-navigator">
-          <button (click)="changeDate(-1)">◀</button>
-          <input
-            type="date"
-            [(ngModel)]="selectedDay"
-            (change)="onDateChange()"
-            class="calendar-input"
-          />
-          <button (click)="changeDate(1)">▶</button>
-        </div>
+        <app-date-navigator
+          [date]="selectedDay"
+          (dateChange)="onDateChanged($event)"
+          (stepped)="onDateStepped($event)"
+        />
       </div>
     </div>
 
@@ -39,37 +34,15 @@
       ⚠️ DAN JE OZNAČEN KAO NERADNI
     </div>
 
-    <div class="bookings-list">
-      <div *ngIf="loading" class="loader">Učitavanje...</div>
-
-      <div class="no-data" *ngIf="!loading && bookings.length === 0">
-        Nema rezervacija za ovaj dan.
-      </div>
-
-      <div class="booking-row" *ngFor="let b of bookings">
-        <div class="time-box">{{ b.time }}</div>
-        <div class="info-box">
-          <span class="client-name">{{ b.name }}</span>
-          <span class="client-services">{{ b.services.join(", ") }}</span>
-        </div>
-        <div class="actions-box">
-          <a
-            [href]="'tel:' + b.phone"
-            class="action-btn call"
-            (click)="copyToClipboard(b.phone)"
-            title="Pozovi i kopiraj broj"
-            >📞</a
-          >
-          <button (click)="confirmDelete(b)" class="action-btn delete">
-            🗑️
-          </button>
-        </div>
-      </div>
-    </div>
+    <app-booking-list
+      [bookings]="bookings"
+      [loading]="loading"
+      (delete)="onDeleteRequested($event)"
+      (call)="onCallCopied($event)"
+    />
   </div>
 </div>
 
-<!-- MODALI -->
 <app-pin-modal
   [visible]="showPinModal"
   (confirmed)="onPinConfirmed($event)"
@@ -89,14 +62,4 @@
   (cancelled)="onQuickAddCancelled()"
 />
 
-<!-- TOAST -->
-<div
-  class="toast"
-  [class.show]="notification.show"
-  [class.error]="notification.type === 'error'"
->
-  <span class="toast-icon">{{
-    notification.type === "success" ? "✅" : "❌"
-  }}</span>
-  <span class="toast-msg">{{ notification.message }}</span>
-</div>
+<app-toast [state]="toast" />

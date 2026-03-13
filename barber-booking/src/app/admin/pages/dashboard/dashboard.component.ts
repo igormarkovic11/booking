@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
 import { PinModalComponent } from '../../../shared/modals/pin-modal/pin-modal.component';
 import { DeleteModalComponent } from '../../../shared/modals/delete-modal/delete-modal.component';
@@ -8,33 +7,28 @@ import {
   QuickAddModalComponent,
   QuickBookingData,
 } from '../../../shared/modals/quick-add-modal/quick-add-modal.component';
+import {
+  BookingListComponent,
+  Booking,
+} from '../../../shared/booking-list/booking-list.component';
+import { DateNavigatorComponent } from '../../../shared/date-navigator/date-navigator.component';
+import {
+  ToastComponent,
+  ToastState,
+} from '../../../shared/toast/toast.component';
 import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
-
-interface Booking {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  time: string;
-  date: string;
-  services: string[];
-}
-
-interface Notification {
-  show: boolean;
-  message: string;
-  type: 'success' | 'error';
-}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     PinModalComponent,
     DeleteModalComponent,
     QuickAddModalComponent,
+    BookingListComponent,
+    DateNavigatorComponent,
+    ToastComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -53,7 +47,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   selectedBooking: Booking | null = null;
   pendingAction: (() => void) | null = null;
-  notification: Notification = { show: false, message: '', type: 'success' };
+  toast: ToastState = { show: false, message: '', type: 'success' };
 
   availableTimes = ALL_TIMES;
 
@@ -80,14 +74,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /* ---------- NAVIGACIJA ---------- */
-  changeDate(days: number): void {
+  onDateStepped(days: number): void {
     const d = new Date(this.selectedDay);
     d.setDate(d.getDate() + days);
     this.selectedDay = d.toISOString().split('T')[0];
     this.loadAdminData();
   }
 
-  onDateChange(): void {
+  onDateChanged(date: string): void {
+    this.selectedDay = date;
     this.loadAdminData();
   }
 
@@ -143,7 +138,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.showToast('Ime i vrijeme su obavezni!', 'error');
       return;
     }
-
     this.loading = true;
     try {
       await this.adminService.addBooking({
@@ -167,7 +161,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /* ---------- BRISANJE ---------- */
-  confirmDelete(booking: Booking): void {
+  onDeleteRequested(booking: Booking): void {
     this.selectedBooking = booking;
     this.showDeleteModal = true;
   }
@@ -195,14 +189,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.availableTimes.filter((t) => !bookedTimes.has(t));
   }
 
-  showToast(message: string, type: 'success' | 'error' = 'success'): void {
-    this.notification = { show: true, message, type };
-    setTimeout(() => (this.notification.show = false), 3000);
-  }
-
-  copyToClipboard(phone: string): void {
+  onCallCopied(phone: string): void {
     navigator.clipboard.writeText(phone).then(() => {
       this.showToast('Broj kopiran: ' + phone);
     });
+  }
+
+  showToast(message: string, type: 'success' | 'error' = 'success'): void {
+    this.toast = { show: true, message, type };
+    setTimeout(() => (this.toast.show = false), 3000);
   }
 }
