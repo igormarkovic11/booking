@@ -13,6 +13,7 @@ import {
   DocumentData,
   setDoc,
   deleteDoc,
+  limit,
 } from '@angular/fire/firestore';
 
 @Injectable({
@@ -197,43 +198,43 @@ export class BookingService {
     }
   }
   /* ---------- POTVRDA TERMINA ---------- */
-  async confirmBooking(
-    bookingId: string,
-    token: string,
-  ): Promise<
-    | 'success'
-    | 'expired'
-    | 'invalid_token'
-    | 'not_found'
-    | 'already_confirmed'
-    | 'slot_taken'
-  > {
+  async confirmBooking(bookingId: string, token: string): Promise<any> {
     const bookingRef = doc(this.firestore, `bookings/${bookingId}`);
     const snap = await getDoc(bookingRef);
+
     if (!snap.exists()) return 'not_found';
     const data: any = snap.data();
+
     if (data.status === 'confirmed') return 'already_confirmed';
     if (data.confirmationToken !== token) return 'invalid_token';
+
     const createdAt = data.createdAt?.toDate();
-    const now = new Date();
-    const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
+    const diffMinutes = (Date.now() - createdAt.getTime()) / 1000 / 60;
+
     if (diffMinutes > 15) {
-      await updateDoc(bookingRef, { status: 'expired' });
+      // Ne čekamo await ovde, pustimo ga u pozadini da bi korisnik brže video odgovor
+      updateDoc(bookingRef, { status: 'expired' });
       return 'expired';
     }
-    // *** NOVA PROVJERA: Da li je neko drugi već potvrdio ovaj termin? ***
+
+    // OPTIMIZACIJA KONFLIKTA: Koristi query sa limitom (limit 1) jer nam treba samo bilo kakav dokaz
+    // Uvezi 'limit' iz firestore-a gore u importima
     const conflictQuery = query(
       collection(this.firestore, 'bookings'),
       where('date', '==', data.date),
       where('time', '==', data.time),
       where('status', '==', 'confirmed'),
+      limit(1),
     );
+
     const conflictSnap = await getDocs(conflictQuery);
+
     if (!conflictSnap.empty) {
-      // Obriši ovu rezervaciju jer je termin zauzet
-      await updateDoc(bookingRef, { status: 'expired' });
+      updateDoc(bookingRef, { status: 'expired' });
       return 'slot_taken';
     }
+
+    // Finalni korak - Potvrda
     await updateDoc(bookingRef, { status: 'confirmed', expireAt: null });
     return 'success';
   }
