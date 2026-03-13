@@ -145,6 +145,7 @@ export class DashboardComponent implements OnInit {
   quickAdd() {
     this.runWithPin(() => {
       this.showQuickAddModal = true;
+      document.body.style.overflow = 'hidden'; // DODAJ OVO
     });
   }
 
@@ -210,6 +211,7 @@ export class DashboardComponent implements OnInit {
 
   closeQuickAdd() {
     this.showQuickAddModal = false;
+    document.body.style.overflow = 'auto'; // DODAJ OVO
     this.newBooking = {
       name: '',
       phone: '',
