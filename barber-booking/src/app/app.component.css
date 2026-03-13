@@ -13,8 +13,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
 
   background:
     linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
@@ -24,9 +24,6 @@
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-
-  /* DODAJ OVO: Sprečava bilo kakvo skaliranje pri promjeni viewporta */
-  background-attachment: fixed;
 
   z-index: -1;
   will-change: transform;
