@@ -62,6 +62,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadAdminData();
+    document.body.style.overflow = 'auto';
   }
 
   // Glavna funkcija koja osvježava sve na promjenu datuma
