@@ -16,6 +16,8 @@ import {
 } from '@angular/fire/firestore';
 import { EmailTemplateService } from './email-template.service';
 
+const DAYOFFS_CACHE_KEY = 'dayoffs_cache';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -194,21 +196,21 @@ export class BookingService {
       query(this.bookingsRef, where('date', '<', today)),
     );
     await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
-    console.log(`Očišćeno ${snapshot.size} starih termina.`);
   }
 
-  /* ---------- NERADNI DANI ---------- */
-  private cachedDayOffs: string[] | null = null;
-
+  /* ---------- NERADNI DANI (sessionStorage cache) ---------- */
   clearDayOffsCache(): void {
-    this.cachedDayOffs = null;
+    sessionStorage.removeItem(DAYOFFS_CACHE_KEY);
   }
 
   async getDayOffs(): Promise<string[]> {
-    if (this.cachedDayOffs) return this.cachedDayOffs;
+    const cached = sessionStorage.getItem(DAYOFFS_CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+
     const snapshot = await getDocs(collection(this.firestore, 'dayoffs'));
-    this.cachedDayOffs = snapshot.docs.map((doc) => doc.id);
-    return this.cachedDayOffs;
+    const dayoffs = snapshot.docs.map((d) => d.id);
+    sessionStorage.setItem(DAYOFFS_CACHE_KEY, JSON.stringify(dayoffs));
+    return dayoffs;
   }
 
   async toggleDayOff(date: string, isOff: boolean): Promise<void> {

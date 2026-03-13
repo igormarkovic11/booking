@@ -4,11 +4,19 @@ import {
   OnInit,
   HostListener,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  Firestore,
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from '@angular/fire/firestore';
 import { BookingService } from '../../../core/services/booking.service';
-import { fromEvent, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { DateSelectorComponent } from './date-selector/date-selector.component';
 import { TimeSelectorComponent } from './time-selector/time-selector.component';
 import {
@@ -44,6 +52,7 @@ export const ALL_TIMES: string[] = [
 @Component({
   selector: 'app-booking',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     DateSelectorComponent,
@@ -74,13 +83,14 @@ export class BookingComponent implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
 
-  private refreshInterval: any;
+  private snapshotUnsub?: () => void;
   private midnightInterval: any;
   private visibilitySub!: Subscription;
   private lastCheckedDate = new Date().toDateString();
 
   constructor(
     private bookingService: BookingService,
+    private firestore: Firestore,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -90,27 +100,67 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     if (this.availableDates.length > 0) {
       this.selectedDate = this.availableDates[0];
-      await this.loadBookedTimes();
+      this.subscribeToBookedTimes();
     }
 
-    this.refreshInterval = setInterval(() => this.loadBookedTimes(), 30000);
     this.setupMidnightTimer();
-
-    this.visibilitySub = fromEvent(document, 'visibilitychange').subscribe(
-      () => {
-        if (document.visibilityState === 'visible') {
-          this.loadBookedTimes();
-          this.generateDates();
-        }
-      },
-    );
+    this.setupVisibilityListener();
   }
 
   ngOnDestroy(): void {
-    clearInterval(this.refreshInterval);
+    this.snapshotUnsub?.();
     clearInterval(this.midnightInterval);
     this.visibilitySub?.unsubscribe();
   }
+
+  /* ---------- REAL-TIME LISTENER ---------- */
+  private subscribeToBookedTimes(): void {
+    // Unsubscribe from previous date before subscribing to new one
+    this.snapshotUnsub?.();
+
+    const q = query(
+      collection(this.firestore, 'bookings'),
+      where('date', '==', this.selectedDate),
+    );
+
+    this.snapshotUnsub = onSnapshot(q, (snapshot) => {
+      const now = new Date();
+      this.bookedTimes = snapshot.docs
+        .map((doc) => {
+          const data = doc.data() as any;
+          const createdAt = data.createdAt?.toDate?.() ?? new Date();
+          const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
+
+          if (
+            data.status === 'confirmed' ||
+            (data.status === 'pending' && diffMinutes < 15)
+          ) {
+            return data.time;
+          }
+          return null;
+        })
+        .filter((t): t is string => t !== null);
+
+      // OnPush: manually trigger change detection since data arrived from outside Angular
+      this.cdr.markForCheck();
+    });
+  }
+
+  /* ---------- VISIBILITY LISTENER (pause when hidden) ---------- */
+  private setupVisibilityListener(): void {
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+  }
+
+  private onVisibilityChange = async (): Promise<void> => {
+    if (document.visibilityState !== 'visible') return;
+
+    // Re-subscribe in case connection dropped while hidden
+    if (this.selectedDate) {
+      this.subscribeToBookedTimes();
+    }
+    await this.generateDates();
+    this.cdr.markForCheck();
+  };
 
   /* ---------- DATUMI ---------- */
   async generateDates(): Promise<void> {
@@ -138,14 +188,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   async onDateChanged(date: string): Promise<void> {
     this.selectedDate = date;
     this.selectedTime = null;
-    await this.loadBookedTimes();
-  }
-
-  async loadBookedTimes(): Promise<void> {
-    if (!this.selectedDate) return;
-    this.bookedTimes = await this.bookingService.getBookedTimesForDate(
-      this.selectedDate,
-    );
+    this.subscribeToBookedTimes(); // re-subscribe for the new date
   }
 
   /* ---------- TERMINI ---------- */
@@ -201,6 +244,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
+    this.cdr.markForCheck();
 
     try {
       const isAvailable = await this.bookingService.isSlotAvailable(
@@ -227,7 +271,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Došlo je do greške. Pokušajte ponovo.';
     } finally {
       this.loading = false;
-      await this.loadBookedTimes();
+      this.cdr.markForCheck();
     }
   }
 
@@ -271,8 +315,8 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     if (!this.availableDates.includes(this.selectedDate)) {
       this.selectedDate = this.availableDates[0];
-      await this.loadBookedTimes();
+      this.subscribeToBookedTimes();
     }
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
 }

@@ -1,4 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface Service {
@@ -11,11 +17,12 @@ export interface Service {
   selector: 'app-service-selector',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="services-box" [style.opacity]="disabled ? '0.5' : '1'">
       <p class="services-title">Koje usluge želiš? <span>(opciono)</span></p>
       <div class="checkboxes">
-        <label *ngFor="let service of services">
+        <label *ngFor="let service of services; trackBy: trackByValue">
           <input
             type="checkbox"
             [checked]="service.selected"
@@ -33,6 +40,10 @@ export class ServiceSelectorComponent {
   @Input() services: Service[] = [];
   @Input() disabled = false;
   @Output() toggled = new EventEmitter<Service>();
+
+  trackByValue(_: number, service: Service): string {
+    return service.value;
+  }
 
   onToggle(service: Service): void {
     this.toggled.emit(service);

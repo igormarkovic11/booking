@@ -1,4 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface Booking {
@@ -15,6 +21,7 @@ export interface Booking {
   selector: 'app-booking-list',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bookings-list">
       <div *ngIf="loading" class="loader">Učitavanje...</div>
@@ -23,7 +30,7 @@ export interface Booking {
         Nema rezervacija za ovaj dan.
       </div>
 
-      <div class="booking-row" *ngFor="let b of bookings">
+      <div class="booking-row" *ngFor="let b of bookings; trackBy: trackById">
         <div class="time-box">{{ b.time }}</div>
         <div class="info-box">
           <span class="client-name">{{ b.name }}</span>
@@ -49,6 +56,10 @@ export class BookingListComponent {
   @Input() loading = false;
   @Output() delete = new EventEmitter<Booking>();
   @Output() call = new EventEmitter<string>();
+
+  trackById(_: number, booking: Booking): string {
+    return booking.id;
+  }
 
   onCall(phone: string): void {
     this.call.emit(phone);

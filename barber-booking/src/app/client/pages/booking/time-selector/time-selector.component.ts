@@ -1,15 +1,22 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-time-selector',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <p class="step-instruction">Odaberite termin</p>
     <div class="time-grid">
       <button
-        *ngFor="let time of times"
+        *ngFor="let time of times; trackBy: trackByTime"
         (click)="onSelect(time)"
         [disabled]="isBooked(time) || disabled"
         [class.active]="selectedTime === time"
@@ -27,6 +34,10 @@ export class TimeSelectorComponent {
   @Input() selectedTime: string | null = null;
   @Input() disabled = false;
   @Output() timeChange = new EventEmitter<string | null>();
+
+  trackByTime(_: number, time: string): string {
+    return time;
+  }
 
   isBooked(time: string): boolean {
     return this.bookedTimes.includes(time);
