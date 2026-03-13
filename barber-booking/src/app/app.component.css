@@ -25,6 +25,9 @@
   background-position: center center;
   background-repeat: no-repeat;
 
+  /* DODAJ OVO: Sprečava bilo kakvo skaliranje pri promjeni viewporta */
+  background-attachment: fixed;
+
   z-index: -1;
   will-change: transform;
   transform: translateZ(0);
