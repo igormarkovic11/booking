@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
@@ -10,7 +10,7 @@ import { AdminService } from '../../../core/services/admin.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   // Koristimo inject umjesto konstruktora za stabilniji rad sa Firebase-om
   private adminService = inject(AdminService);
 
@@ -62,6 +62,9 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadAdminData();
+  }
+
+  ngOnDestroy(): void {
     document.body.style.overflow = 'auto';
   }
 
