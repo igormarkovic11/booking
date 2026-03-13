@@ -4,11 +4,22 @@ import {
   OnInit,
   HostListener,
   ChangeDetectorRef,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { BookingService } from '../../../core/services/booking.service';
 import { fromEvent, Subscription } from 'rxjs';
+import { DateSelectorComponent } from './date-selector/date-selector.component';
+import { TimeSelectorComponent } from './time-selector/time-selector.component';
+import {
+  ServiceSelectorComponent,
+  Service,
+} from './service-selector/service-selector.component';
+import {
+  BookingFormComponent,
+  BookingFormData,
+} from './booking-form/booking-form.component';
+import { SuccessMessageComponent } from './success-message/success-message.component';
 
 export const ALL_TIMES: string[] = [
   '09:00',
@@ -33,29 +44,32 @@ export const ALL_TIMES: string[] = [
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    DateSelectorComponent,
+    TimeSelectorComponent,
+    ServiceSelectorComponent,
+    BookingFormComponent,
+    SuccessMessageComponent,
+  ],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.scss'],
 })
 export class BookingComponent implements OnInit, OnDestroy {
+  @ViewChild(BookingFormComponent) bookingForm!: BookingFormComponent;
+
   availableDates: string[] = [];
   selectedDate = '';
-  today = new Date();
-
-  allTimes = ALL_TIMES;
   bookedTimes: string[] = [];
   selectedTime: string | null = null;
 
-  services = [
+  services: Service[] = [
     { label: 'Šišanje', value: 'sisanje', selected: false },
     { label: 'Brijanje', value: 'brijanje', selected: false },
     { label: 'Stilizovanje', value: 'stilizovanje', selected: false },
     { label: 'Trimovanje', value: 'trimovanje', selected: false },
   ];
 
-  name = '';
-  phone = '';
-  email = '';
   loading = false;
   errorMessage = '';
   successMessage = '';
@@ -70,13 +84,13 @@ export class BookingComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
     this.bookingService.cleanupOldBookings();
     await this.generateDates();
 
     if (this.availableDates.length > 0) {
       this.selectedDate = this.availableDates[0];
-      this.loadBookedTimes();
+      await this.loadBookedTimes();
     }
 
     this.refreshInterval = setInterval(() => this.loadBookedTimes(), 30000);
@@ -98,6 +112,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.visibilitySub?.unsubscribe();
   }
 
+  /* ---------- DATUMI ---------- */
   async generateDates(): Promise<void> {
     try {
       const bannedDates = await this.bookingService.getDayOffs();
@@ -108,9 +123,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       while (newDates.length < 3) {
         const dateStr = temp.toLocaleDateString('sv-SE');
         const day = temp.getDay();
-        const isWeekend = day === 0 || day === 1;
-
-        if (!isWeekend && !bannedDates.includes(dateStr)) {
+        if (day !== 0 && day !== 1 && !bannedDates.includes(dateStr)) {
           newDates.push(dateStr);
         }
         temp.setDate(temp.getDate() + 1);
@@ -122,7 +135,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
   }
 
-  async onDateChange(): Promise<void> {
+  async onDateChanged(date: string): Promise<void> {
+    this.selectedDate = date;
     this.selectedTime = null;
     await this.loadBookedTimes();
   }
@@ -134,18 +148,18 @@ export class BookingComponent implements OnInit, OnDestroy {
     );
   }
 
+  /* ---------- TERMINI ---------- */
   get filteredTimes(): string[] {
     if (!this.selectedDate) return [];
 
     const now = new Date();
     const todayStr = now.toLocaleDateString('sv-SE');
-
-    if (this.selectedDate !== todayStr) return this.allTimes;
+    if (this.selectedDate !== todayStr) return ALL_TIMES;
 
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
 
-    return this.allTimes.filter((time) => {
+    return ALL_TIMES.filter((time) => {
       const [hour, minute] = time.split(':').map(Number);
       return (
         hour > currentHour ||
@@ -154,11 +168,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     });
   }
 
-  selectTime(time: string): void {
-    this.selectedTime = this.selectedTime === time ? null : time;
-  }
-
-  toggleService(service: { selected: boolean }): void {
+  /* ---------- USLUGE ---------- */
+  onServiceToggled(service: Service): void {
     service.selected = !service.selected;
   }
 
@@ -166,33 +177,25 @@ export class BookingComponent implements OnInit, OnDestroy {
     return this.services.filter((s) => s.selected).map((s) => s.label);
   }
 
-  isTimeBooked(time: string): boolean {
-    return this.bookedTimes.includes(time);
-  }
-
-  isValidEmail(email: string): boolean {
-    return /\S+@\S+\.\S+/.test(email);
-  }
-
-  async submitBooking(): Promise<void> {
+  /* ---------- SUBMIT ---------- */
+  async onFormSubmitted(formData: BookingFormData): Promise<void> {
     this.errorMessage = '';
-    this.successMessage = '';
 
     if (!this.selectedDate || !this.selectedTime) {
       this.errorMessage = 'Odaberi datum i termin';
       return;
     }
-    if (!this.name.trim() || !this.phone.trim()) {
+    if (!formData.name.trim() || !formData.phone.trim()) {
       this.errorMessage = 'Unesi ime i broj telefona';
       return;
     }
-    if (!this.email.trim() || !this.isValidEmail(this.email)) {
+    if (!formData.email.trim() || !this.isValidEmail(formData.email)) {
       this.errorMessage = 'Unesi validan email';
       return;
     }
 
     const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/;
-    if (this.phone.trim().length < 9 || !phoneRegex.test(this.phone)) {
+    if (formData.phone.trim().length < 9 || !phoneRegex.test(formData.phone)) {
       this.errorMessage = 'Unesite ispravan broj telefona (min. 9 cifara)';
       return;
     }
@@ -214,12 +217,10 @@ export class BookingComponent implements OnInit, OnDestroy {
         date: this.selectedDate,
         time: this.selectedTime!,
         services: this.getSelectedServices(),
-        name: this.name,
-        phone: this.phone,
-        email: this.email,
+        ...formData,
       });
 
-      this.successMessage = `Poslali smo ti link za potvrdu na ${this.email}. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.`;
+      this.successMessage = `Poslali smo ti link za potvrdu na ${formData.email}. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.`;
       this.resetForm();
     } catch (error) {
       console.error('Greška pri čuvanju:', error);
@@ -230,12 +231,23 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
   }
 
+  onSuccessClosed(): void {
+    this.successMessage = '';
+  }
+
+  /* ---------- POMOĆNE METODE ---------- */
+  get canSubmit(): boolean {
+    return !!this.selectedTime;
+  }
+
+  isValidEmail(email: string): boolean {
+    return /\S+@\S+\.\S+/.test(email);
+  }
+
   resetForm(): void {
     this.selectedTime = null;
-    this.name = '';
-    this.phone = '';
-    this.email = '';
     this.services.forEach((s) => (s.selected = false));
+    this.bookingForm?.reset();
   }
 
   @HostListener('window:focus')

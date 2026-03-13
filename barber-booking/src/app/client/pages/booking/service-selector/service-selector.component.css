@@ -1,0 +1,34 @@
+.services-box {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 20px;
+  transition: opacity 0.2s;
+}
+
+.services-title {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 8px;
+
+  span {
+    opacity: 0.6;
+  }
+}
+
+.checkboxes label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.checkboxes input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #1976d2;
+  cursor: pointer;
+}

@@ -1,0 +1,63 @@
+.step-instruction {
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  text-align: center;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+
+  button {
+    height: 44px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+    transition:
+      background 0.2s ease,
+      transform 0.1s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    user-select: none;
+
+    &:active {
+      background: rgba(25, 118, 210, 0.4);
+      transform: scale(0.96);
+    }
+
+    &.active {
+      background: #1976d2 !important;
+      color: white !important;
+      border: none !important;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+      transform: scale(1) !important;
+    }
+
+    &.booked {
+      opacity: 0.3;
+      pointer-events: none;
+      text-decoration: line-through;
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
+}
+
+@media (hover: hover) {
+  .time-grid button:hover:not(.booked):not(.active) {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+  }
+}
+
+@media (min-width: 768px) {
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
