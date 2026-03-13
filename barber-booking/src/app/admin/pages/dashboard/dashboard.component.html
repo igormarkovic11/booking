@@ -11,7 +11,6 @@
           >
             {{ isCurrentDayOff ? "🔓 Otvori dan" : "🚫 Zatvori dan" }}
           </button>
-
           <button
             class="add-btn"
             (click)="quickAdd()"
@@ -25,14 +24,12 @@
       <div class="date-row">
         <div class="date-navigator">
           <button (click)="changeDate(-1)">◀</button>
-
           <input
             type="date"
             [(ngModel)]="selectedDay"
             (change)="onDateChange()"
             class="calendar-input"
           />
-
           <button (click)="changeDate(1)">▶</button>
         </div>
       </div>
@@ -61,9 +58,8 @@
             class="action-btn call"
             (click)="copyToClipboard(b.phone)"
             title="Pozovi i kopiraj broj"
+            >📞</a
           >
-            📞
-          </a>
           <button (click)="confirmDelete(b)" class="action-btn delete">
             🗑️
           </button>
@@ -73,106 +69,27 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="showPinModal">
-  <div class="admin-card modal-content pin-modal">
-    <h3>Autorizacija</h3>
-    <p>Unesite PIN za nastavak</p>
-    <input
-      type="password"
-      [(ngModel)]="tempPin"
-      class="pin-input"
-      maxlength="4"
-      (keyup.enter)="confirmActionWithPin()"
-      placeholder="****"
-    />
-    <div class="modal-actions">
-      <button class="action-btn cancel" (click)="closePinModal()">
-        Odustani
-      </button>
-      <button class="add-btn" (click)="confirmActionWithPin()">Potvrdi</button>
-    </div>
-  </div>
-</div>
+<!-- MODALI -->
+<app-pin-modal
+  [visible]="showPinModal"
+  (confirmed)="onPinConfirmed($event)"
+  (cancelled)="onPinCancelled()"
+/>
 
-<div class="modal-overlay" *ngIf="showDeleteModal">
-  <div class="admin-card modal-content delete-modal">
-    <div class="modal-icon">⚠️</div>
-    <h3>Brisanje termina</h3>
-    <p>Jeste li sigurni? Klijent će dobiti email obaveštenje o otkazivanju.</p>
-    <div class="modal-actions">
-      <button class="action-btn cancel" (click)="closeDeleteModal()">
-        Odustani
-      </button>
-      <button class="action-btn delete-confirm" (click)="executeDelete()">
-        Obriši
-      </button>
-    </div>
-  </div>
-</div>
+<app-delete-modal
+  [visible]="showDeleteModal"
+  (confirmed)="onDeleteConfirmed()"
+  (cancelled)="onDeleteCancelled()"
+/>
 
-<div class="modal-overlay" *ngIf="showQuickAddModal">
-  <div class="admin-card modal-content quick-add-modal">
-    <h3>Novo zakazivanje</h3>
-    <div class="form-group">
-      <label class="input-label">Ime klijenta</label>
-      <input
-        type="text"
-        [(ngModel)]="newBooking.name"
-        class="admin-input-field"
-        placeholder="Unesite ime..."
-      />
+<app-quick-add-modal
+  [visible]="showQuickAddModal"
+  [availableTimes]="filteredAvailableTimes"
+  (saved)="onQuickAddSaved($event)"
+  (cancelled)="onQuickAddCancelled()"
+/>
 
-      <label class="input-label">Telefon (opciono)</label>
-      <input
-        type="tel"
-        [(ngModel)]="newBooking.phone"
-        class="admin-input-field"
-        placeholder="06x..."
-      />
-
-      <label class="input-label">Email (za obaveštenja)</label>
-      <input
-        type="email"
-        [(ngModel)]="newBooking.email"
-        class="admin-input-field"
-        placeholder="klijent@mail.com"
-      />
-
-      <label class="input-label">Izaberi vreme</label>
-      <div class="time-grid">
-        <button
-          *ngFor="let t of filteredAvailableTimes"
-          [class.selected]="newBooking.time === t"
-          (click)="newBooking.time = t"
-          class="time-chip"
-        >
-          {{ t }}
-        </button>
-      </div>
-
-      <label class="input-label">Usluge</label>
-      <div class="service-chips">
-        <button
-          *ngFor="let s of allServices"
-          [class.active]="newBooking.services.includes(s)"
-          (click)="toggleService(s)"
-          class="service-chip"
-        >
-          {{ s }}
-        </button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="action-btn cancel" (click)="closeQuickAdd()">
-        Odustani
-      </button>
-      <button class="add-btn" (click)="saveQuickBooking()">
-        Kreiraj termin
-      </button>
-    </div>
-  </div>
-</div>
-
+<!-- TOAST -->
 <div
   class="toast"
   [class.show]="notification.show"

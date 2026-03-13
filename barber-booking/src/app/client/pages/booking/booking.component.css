@@ -18,13 +18,13 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   color: white;
   transition: opacity 0.3s ease-in-out;
-}
 
-.booking-card h2 {
-  text-align: center;
-  margin-bottom: 16px;
-  font-weight: 600;
-  font-size: 1.5rem;
+  h2 {
+    text-align: center;
+    margin-bottom: 16px;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
 }
 
 .step-instruction {
@@ -44,12 +44,12 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   margin-bottom: 16px;
   font-size: 1rem;
-  cursor: pointer; /* dodaj ovo */
-}
+  cursor: pointer;
 
-.date-dropdown option {
-  background: #333;
-  color: white;
+  option {
+    background: #333;
+    color: white;
+  }
 }
 
 /* TERMINI */
@@ -58,62 +58,52 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 20px;
+
+  button {
+    height: 44px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+    transition:
+      background 0.2s ease,
+      transform 0.1s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    user-select: none;
+
+    &:active {
+      background: rgba(25, 118, 210, 0.4);
+      transform: scale(0.96);
+    }
+
+    &.active {
+      background: #1976d2 !important;
+      color: white !important;
+      border: none !important;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+      transform: scale(1) !important;
+    }
+
+    &.booked {
+      opacity: 0.3;
+      pointer-events: none;
+      text-decoration: line-through;
+      background: rgba(255, 255, 255, 0.02);
+    }
+  }
 }
 
-.time-grid button {
-  height: 44px;
-  font-size: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  background: rgba(255, 255, 255, 0.05);
-  transition:
-    background 0.2s ease,
-    transform 0.1s ease; /* Brža transformacija */
-  cursor: pointer;
-
-  /* DODATO: Sprečava sivi blic i poboljšava odziv na mobilnom */
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
-  user-select: none; /* Sprečava slučajno selektovanje teksta tokom klika */
-}
-
-/* IZMENJENO: Hover se aktivira SAMO na uređajima sa mišem (Desktop) */
+/* Hover only on desktop */
 @media (hover: hover) {
   .time-grid button:hover:not(.booked):not(.active) {
     background: rgba(255, 255, 255, 0.18);
     transform: translateY(-1px);
   }
 }
-
-/* NOVO: Instant feedback čim prst dotakne ekran */
-.time-grid button:active {
-  background: rgba(25, 118, 210, 0.4);
-  transform: scale(0.96);
-}
-
-/* IZMENJENO: Aktivna klasa mora biti "najjača" */
-.time-grid button.active {
-  background: #1976d2 !important;
-  color: white !important;
-  border: none !important;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-  transform: scale(1) !important; /* Vraća na punu veličinu kad je izabrano */
-}
-
-.time-grid button.booked {
-  opacity: 0.3;
-  pointer-events: none;
-  text-decoration: line-through;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-/* hover efekt
-.time-grid button:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-} */
 
 /* CHECKBOXOVI */
 .services-box {
@@ -136,14 +126,14 @@
   color: white;
   font-size: 0.95rem;
   margin-bottom: 8px;
-  cursor: pointer; /* dodaj ovo */
+  cursor: pointer;
 }
 
 .checkboxes input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #1976d2; /* moderni blue za checkbox */
-  cursor: pointer; /* dodaj ovo */
+  accent-color: #1976d2;
+  cursor: pointer;
 }
 
 /* INPUT POLJA */
@@ -156,10 +146,10 @@
   background: rgba(255, 255, 255, 0.05);
   color: white;
   font-size: 1rem;
-}
 
-.custom-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
 }
 
 /* DUGME */
@@ -173,37 +163,14 @@
   font-weight: 600;
   border: none;
   cursor: pointer;
-}
 
-.submit-btn:disabled {
-  background: rgba(25, 118, 210, 0.5);
-  cursor: not-allowed;
-}
-
-/* SUCCESS SCREEN */
-.success-container {
-  text-align: center;
-  padding: 20px 10px;
-  animation: fadeIn 0.4s ease-out;
-
-  .success-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
-  }
-
-  h2 {
-    color: #4caf50;
-    margin-bottom: 16px;
-  }
-
-  .success-text {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin-bottom: 30px;
-    opacity: 0.9;
+  &:disabled {
+    background: rgba(25, 118, 210, 0.5);
+    cursor: not-allowed;
   }
 }
 
+/* GREŠKA */
 .error-text {
   color: #ff5252;
   font-size: 0.9rem;
@@ -212,11 +179,109 @@
   animation: shake 0.2s ease-in-out;
 }
 
-/* Animacija za pojavljivanje */
+/* SUCCESS BOX */
+.submission-area {
+  position: relative;
+  min-height: 200px;
+}
+
+.inline-success-box {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+
+  .success-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    color: #4caf50;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+
+  .success-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
+  }
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* DISABLED STATES */
+.date-dropdown:disabled,
+.time-grid button:disabled:not(.booked) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* LOADER */
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(25, 118, 210, 0.2);
+  border-top: 3px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+.content-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* DESKTOP */
+@media (min-width: 768px) {
+  .time-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .booking-card {
+    padding: 32px 24px;
+
+    h2 {
+      font-size: 1.8rem;
+    }
+  }
+
+  .submit-btn {
+    font-size: 1.1rem;
+  }
+}
+
+/* ANIMACIJE */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
@@ -237,121 +302,11 @@
   }
 }
 
-/* DESKTOP */
-@media (min-width: 768px) {
-  .time-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .booking-card {
-    padding: 32px 24px;
-  }
-
-  .booking-card h2 {
-    font-size: 1.8rem;
-  }
-
-  .submit-btn {
-    font-size: 1.1rem;
-  }
-}
-
-/* NOVO: Stil za poruku unutar forme */
-.submission-area {
-  position: relative;
-  min-height: 200px; /* Da ne bi skakala visina kartice */
-}
-
-.inline-success-box {
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.4);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  animation: fadeIn 0.4s ease-out;
-}
-
-.inline-success-box .success-icon {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-.inline-success-box h3 {
-  color: #4caf50;
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-}
-
-.inline-success-box .success-text {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 20px;
-}
-
-.close-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 24px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Onemogući klikove na gornji deo dok je poruka tu */
-.date-dropdown:disabled,
-.time-grid button:disabled:not(.booked) {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Stil za loader */
-.loader-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 0;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(25, 118, 210, 0.2);
-  border-top: 3px solid #1976d2;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 10px;
-}
-
-/* Animacija za sadržaj */
-.content-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
-}
-
 @keyframes spin {
-  0% {
+  from {
     transform: rotate(0deg);
   }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: rotate(360deg);
   }
 }

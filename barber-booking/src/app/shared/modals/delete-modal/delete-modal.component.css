@@ -1,0 +1,87 @@
+.modal-overlay {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-content {
+  background: #1e1e1e;
+  padding: 25px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: modalAppear 0.3s ease-out;
+  color: white;
+}
+
+.delete-modal {
+  text-align: center;
+  border-top: 4px solid #ff5252;
+
+  .modal-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+  h3 {
+    color: #ff5252;
+    margin-bottom: 15px;
+  }
+  p {
+    color: #ccc;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.delete-confirm {
+  background: #ff5252 !important;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-btn.cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 25px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

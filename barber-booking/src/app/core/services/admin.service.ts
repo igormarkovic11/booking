@@ -1,7 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import {
-  CollectionReference,
-  DocumentData,
   Firestore,
   collection,
   addDoc,
@@ -10,132 +8,86 @@ import {
   getDocs,
   doc,
   deleteDoc,
-  setDoc,
   getDoc,
 } from '@angular/fire/firestore';
 import { BookingService } from './booking.service';
+import { EmailTemplateService } from './email-template.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
   private firestore = inject(Firestore);
-  private bookingService = inject(BookingService); // Ubaci BookingService
+  private bookingService = inject(BookingService);
+  private emailTemplate = inject(EmailTemplateService);
   private bookingsRef = collection(this.firestore, 'bookings');
 
-  /* DOHVATI REZERVACIJE */
+  /* ---------- DOHVATI REZERVACIJE ---------- */
   async getBookingsForDate(date: string) {
-    const q = query(
-      this.bookingsRef,
-      where('date', '==', date),
-      where('status', '==', 'confirmed'),
+    const snapshot = await getDocs(
+      query(
+        this.bookingsRef,
+        where('date', '==', date),
+        where('status', '==', 'confirmed'),
+      ),
     );
-
-    const snapshot = await getDocs(q);
     return snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .sort((a: any, b: any) => a.time.localeCompare(b.time));
+      .map((doc) => ({ id: doc.id, ...(doc.data() as any) }))
+      .sort((a, b) => a.time.localeCompare(b.time));
   }
 
+  /* ---------- PROVJERA PIN-a ---------- */
   async verifyPin(enteredPin: string): Promise<boolean> {
     try {
-      const docRef = doc(this.firestore, 'internal', 'config');
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        return docSnap.data()['adminPin'] == enteredPin;
-      }
-      return false;
-    } catch (error) {
-      console.error('Greška pri proveri PIN-a:', error);
+      const snap = await getDoc(doc(this.firestore, 'internal', 'config'));
+      return snap.exists() && snap.data()['adminPin'] == enteredPin;
+    } catch {
       return false;
     }
   }
 
+  /* ---------- DODAJ REZERVACIJU ---------- */
   async addBooking(bookingData: any) {
+    return addDoc(this.bookingsRef, {
+      ...bookingData,
+      createdAt: new Date(),
+    });
+  }
+
+  /* ---------- OBRIŠI I OBAVIJESTI ---------- */
+  async deleteBookingAndNotify(booking: any): Promise<void> {
+    await deleteDoc(doc(this.firestore, `bookings/${booking.id}`));
+
+    if (!booking.email?.trim()) return;
+
+    const formattedDate = booking.date.split('-').reverse().join('.');
+    const { subject, html } = this.emailTemplate.getCancellationEmail({
+      name: booking.name,
+      formattedDate,
+      time: booking.time,
+      services: booking.services,
+    });
+
     try {
-      const bookingsRef = collection(this.firestore, 'bookings');
-      // addDoc pravi novi dokument sa nasumičnim ID-em
-      return await addDoc(bookingsRef, {
-        ...bookingData,
-        createdAt: new Date(), // Dodajemo timestamp radi reda
+      await addDoc(this.bookingsRef, {
+        to: [booking.email],
+        message: { subject, html },
+        status: 'cancelled',
+        type: 'email_trigger',
+        createdAt: new Date(),
       });
     } catch (error) {
-      console.error('Greška pri dodavanju rezervacije:', error);
-      throw error;
+      console.error('Email trigger neuspješan:', error);
     }
   }
 
-  async deleteBookingAndNotify(booking: any) {
-    // 1. Prvo brišemo originalni termin (dokument koji ima status 'confirmed')
-    const docRef = doc(this.firestore, `bookings/${booking.id}`);
-
-    try {
-      await deleteDoc(docRef);
-    } catch (err) {
-      console.error('Greška pri brisanju dokumenta:', err);
-      throw err; // Ako ne obriše termin, nećemo ni slati lažni mail dokument
-    }
-
-    // 2. Ako klijent ima email, šaljemo email kroz ISTU kolekciju (bookings)
-    // jer tvoja ekstenzija trenutno sluša samo tu kolekciju
-    if (booking.email && booking.email.trim() !== '') {
-      try {
-        const formattedDate = booking.date.split('-').reverse().join('.');
-
-        // PAŽNJA: Menjamo 'mail' u 'bookings' jer tvoja ekstenzija sluša 'bookings'
-        const bookingsCollection = collection(this.firestore, 'bookings');
-
-        const mailPayload = {
-          // Polja koja Trigger Email ekstenzija zahteva:
-          to: [booking.email],
-          message: {
-            subject: `Otkazan termin: ${formattedDate} u ${booking.time}`,
-            html: `
-          <div style="background-color: #121212; padding: 40px 10px; font-family: 'Segoe UI', Arial, sans-serif; color: #ffffff; text-align: center;">
-            <div style="max-width: 500px; margin: 0 auto; background-color: #1e1e1e; border: 1px solid #333333; border-radius: 20px; padding: 30px;">
-              <h1 style="color: #ff5252; margin-top: 0;">Termin je otkazan</h1>
-              <p style="font-size: 16px; color: #eeeeee;">Zdravo ${booking.name || 'klijentu'}, obavještavamo Vas da je Vaš termin otkazan.</p>
-              
-              <div style="background-color: #2a2a2a; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: left; border: 1px solid #444444;">
-                <p style="margin: 5px 0; color: #ffffff;"><strong>📅 Datum:</strong> ${formattedDate}</p>
-                <p style="margin: 5px 0; color: #ffffff;"><strong>⏰ Vrijeme:</strong> ${booking.time}</p>
-                <p style="margin: 5px 0; color: #ffffff;"><strong>✂️ Usluge:</strong> ${booking.services?.join(', ') || 'Nije navedeno'}</p>
-              </div>
-
-              <a href="https://booking-ashen-nine.vercel.app/" 
-                 style="display: inline-block; margin-top: 20px; padding: 12px 25px; background-color: #1976d2; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: bold;">
-                 ZAKAŽI NOVI TERMIN
-              </a>
-            </div>
-          </div>
-          `,
-          },
-          // Polja koja pomažu tebi i tvom dashboardu:
-          status: 'cancelled', // Da bi getBookingsForDate ignorisao ovaj dokument
-          type: 'email_trigger', // Opciona oznaka radi lakšeg snalaženja u bazi
-          createdAt: new Date(),
-        };
-
-        await addDoc(bookingsCollection, mailPayload);
-        console.log(
-          'Zahtev za otkazni email uspešno kreiran u bookings kolekciji.',
-        );
-      } catch (mailError) {
-        // Logujemo grešku ali ne prekidamo proces jer je termin već obrisan
-        console.error('Email trigger neuspešan:', mailError);
-      }
-    }
-  }
-
-  /* NERADNI DANI - Koristimo BookingService radi keširanja */
+  /* ---------- NERADNI DANI ---------- */
   async checkIfDayOff(date: string): Promise<boolean> {
     const dayOffs = await this.bookingService.getDayOffs();
     return dayOffs.includes(date);
   }
 
-  async toggleDayOff(date: string, shouldBeOff: boolean) {
-    // Pozivamo metodu iz BookingService-a jer ona brine o bazi I o kešu
+  async toggleDayOff(date: string, shouldBeOff: boolean): Promise<void> {
     await this.bookingService.toggleDayOff(date, shouldBeOff);
   }
 }
