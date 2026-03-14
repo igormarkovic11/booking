@@ -172,6 +172,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.globalKnownIds.clear();
 
     const today = new Date().toLocaleDateString('sv-SE');
+    console.log('Global snapshot starting, today:', today);
 
     const q = query(
       collection(this.firestore, 'bookings'),
@@ -180,14 +181,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
 
     this.globalSnapshotUnsub = onSnapshot(q, (snapshot) => {
+      console.log('Global snapshot fired, docs:', snapshot.docs.length);
+      console.log('isFirstGlobalSnapshot:', this.isFirstGlobalSnapshot);
+      console.log('globalKnownIds:', [...this.globalKnownIds]);
+      console.log(
+        'incoming IDs:',
+        snapshot.docs.map((d) => d.id),
+      );
       if (this.isFirstGlobalSnapshot) {
         this.isFirstGlobalSnapshot = false;
         snapshot.docs.forEach((d) => this.globalKnownIds.add(d.id));
+        console.log('First snapshot — populated known IDs silently');
         return;
       }
 
       snapshot.docs.forEach((d) => {
         if (!this.globalKnownIds.has(d.id)) {
+          console.log('NEW booking detected:', d.id, d.data());
           this.globalKnownIds.add(d.id);
           const data = d.data() as any;
           this.notifComponent?.notify({
