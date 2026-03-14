@@ -1,211 +1,253 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AdminService } from '../../../core/services/admin.service';
-import { PinModalComponent } from '../../../shared/modals/pin-modal/pin-modal.component';
+import {
+  Firestore,
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from '@angular/fire/firestore';
+import { DateNavigatorComponent } from '../../../shared/date-navigator/date-navigator.component';
+import {
+  ToastComponent,
+  ToastState,
+} from '../../../shared/toast/toast.component';
 import { DeleteModalComponent } from '../../../shared/modals/delete-modal/delete-modal.component';
 import {
   QuickAddModalComponent,
   QuickBookingData,
 } from '../../../shared/modals/quick-add-modal/quick-add-modal.component';
 import {
-  BookingListComponent,
   Booking,
+  BookingListComponent,
 } from '../../../shared/booking-list/booking-list.component';
-import { DateNavigatorComponent } from '../../../shared/date-navigator/date-navigator.component';
-import {
-  ToastComponent,
-  ToastState,
-} from '../../../shared/toast/toast.component';
+import { AdminService } from '../../../core/services/admin.service';
+import { BookingService } from '../../../core/services/booking.service';
 import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
-import { AuthService } from '../../../core/services/auth.service';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    PinModalComponent,
+    DateNavigatorComponent,
+    BookingListComponent,
+    ToastComponent,
     DeleteModalComponent,
     QuickAddModalComponent,
-    BookingListComponent,
-    DateNavigatorComponent,
-    ToastComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  private adminService = inject(AdminService);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-
   bookings: Booking[] = [];
-  selectedDay = new Date().toISOString().split('T')[0];
   loading = false;
+  loadError = false; // shows retry button when true
+  selectedDay = new Date().toLocaleDateString('sv-SE');
   isCurrentDayOff = false;
+  dayOffs: string[] = [];
 
-  showPinModal = false;
   showDeleteModal = false;
   showQuickAddModal = false;
+  bookingToDelete: Booking | null = null;
 
-  selectedBooking: Booking | null = null;
-  pendingAction: (() => void) | null = null;
   toast: ToastState = { show: false, message: '', type: 'success' };
 
-  availableTimes = ALL_TIMES;
+  private snapshotUnsub?: () => void;
+  private snapshotRetryTimeout?: any;
+  private snapshotRetryCount = 0;
+  private readonly MAX_RETRIES = 5;
 
-  ngOnInit(): void {
-    this.loadAdminData();
+  constructor(
+    private adminService: AdminService,
+    private bookingService: BookingService,
+    private firestore: Firestore,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  async ngOnInit(): Promise<void> {
+    await this.loadAdminData();
+    this.subscribeToBookings();
   }
 
   ngOnDestroy(): void {
-    document.body.style.overflow = 'auto';
+    this.snapshotUnsub?.();
+    clearTimeout(this.snapshotRetryTimeout);
   }
 
+  /* ---------- INITIAL DATA LOAD with retry ---------- */
   async loadAdminData(): Promise<void> {
     this.loading = true;
+    this.loadError = false;
+    this.cdr.markForCheck();
+
     try {
-      [this.bookings, this.isCurrentDayOff] = await Promise.all([
-        this.adminService.getBookingsForDate(this.selectedDay),
-        this.adminService.checkIfDayOff(this.selectedDay),
-      ]);
-    } catch {
-      this.showToast('Greška pri učitavanju podataka', 'error');
+      const [dayOffs] = await Promise.all([this.bookingService.getDayOffs()]);
+      this.dayOffs = dayOffs;
+      this.isCurrentDayOff = this.dayOffs.includes(this.selectedDay);
+    } catch (err) {
+      console.error('Greška pri učitavanju podataka:', err);
+      this.loadError = true;
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
-  /* ---------- NAVIGACIJA ---------- */
-  onDateStepped(days: number): void {
-    const d = new Date(this.selectedDay);
-    d.setDate(d.getDate() + days);
-    this.selectedDay = d.toISOString().split('T')[0];
-    this.loadAdminData();
+  /* Manual retry triggered by "Pokušaj ponovo" button */
+  async retryLoad(): Promise<void> {
+    await this.loadAdminData();
+    if (!this.loadError) this.subscribeToBookings();
   }
 
-  onDateChanged(date: string): void {
+  /* ---------- REAL-TIME BOOKINGS with auto-reconnect ---------- */
+  private subscribeToBookings(): void {
+    this.snapshotUnsub?.();
+    clearTimeout(this.snapshotRetryTimeout);
+
+    const q = query(
+      collection(this.firestore, 'bookings'),
+      where('date', '==', this.selectedDay),
+      where('status', '==', 'confirmed'),
+    );
+
+    this.snapshotUnsub = onSnapshot(
+      q,
+      (snapshot) => {
+        this.snapshotRetryCount = 0;
+        this.bookings = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Booking, 'id'>),
+        }));
+        this.cdr.markForCheck();
+      },
+      (error) => {
+        console.error('Dashboard snapshot error:', error);
+        if (this.snapshotRetryCount < this.MAX_RETRIES) {
+          this.snapshotRetryCount++;
+          const delay = 5000 * Math.pow(2, this.snapshotRetryCount - 1);
+          this.snapshotRetryTimeout = setTimeout(
+            () => this.subscribeToBookings(),
+            delay,
+          );
+        } else {
+          this.loadError = true;
+          this.cdr.markForCheck();
+        }
+      },
+    );
+  }
+
+  /* ---------- DATE ---------- */
+  async onDateChanged(date: string): Promise<void> {
     this.selectedDay = date;
-    this.loadAdminData();
+    this.isCurrentDayOff = this.dayOffs.includes(date);
+    this.snapshotRetryCount = 0;
+    this.subscribeToBookings();
+    this.cdr.markForCheck();
   }
 
-  /* ---------- PIN ---------- */
-  runWithPin(action: () => void): void {
-    this.pendingAction = action;
-    this.showPinModal = true;
+  onDateStepped(direction: number): void {
+    const d = new Date(this.selectedDay);
+    d.setDate(d.getDate() + direction);
+    this.onDateChanged(d.toLocaleDateString('sv-SE'));
   }
 
-  async onPinConfirmed(pin: string): Promise<void> {
-    this.loading = true;
-    const isValid = await this.adminService.verifyPin(pin);
-
-    if (isValid) {
-      try {
-        await this.pendingAction?.();
-      } catch {
-        this.showToast('Greška pri izvršavanju!', 'error');
-      }
-      this.showPinModal = false;
-      this.pendingAction = null;
-    } else {
-      this.showToast('Pogrešan PIN!', 'error');
-    }
-    this.loading = false;
-  }
-
-  onPinCancelled(): void {
-    this.showPinModal = false;
-    this.pendingAction = null;
-  }
-
-  /* ---------- NERADNI DAN ---------- */
-  toggleDayOff(): void {
-    this.runWithPin(async () => {
-      const newState = !this.isCurrentDayOff;
-      await this.adminService.toggleDayOff(this.selectedDay, newState);
-      this.isCurrentDayOff = newState;
-      this.showToast(newState ? 'Dan je zatvoren' : 'Dan je ponovo otvoren');
-    });
-  }
-
-  /* ---------- DODAVANJE ---------- */
-  quickAdd(): void {
-    this.runWithPin(() => {
-      this.showQuickAddModal = true;
-      document.body.style.overflow = 'hidden';
-    });
-  }
-
-  async onQuickAddSaved(data: QuickBookingData): Promise<void> {
-    if (!data.name || !data.time) {
-      this.showToast('Ime i vrijeme su obavezni!', 'error');
-      return;
-    }
-    this.loading = true;
+  /* ---------- DAY OFF ---------- */
+  async toggleDayOff(): Promise<void> {
     try {
-      await this.adminService.addBooking({
-        ...data,
-        date: this.selectedDay,
-        status: 'confirmed',
-      });
-      this.showToast('Termin uspješno dodat!');
-      await this.loadAdminData();
-      this.onQuickAddCancelled();
+      await this.bookingService.toggleDayOff(
+        this.selectedDay,
+        !this.isCurrentDayOff,
+      );
+      this.isCurrentDayOff = !this.isCurrentDayOff;
+      if (this.isCurrentDayOff) {
+        this.dayOffs.push(this.selectedDay);
+      } else {
+        this.dayOffs = this.dayOffs.filter((d) => d !== this.selectedDay);
+      }
+      this.showToast('Dan je ažuriran', 'success');
     } catch {
-      this.showToast('Greška pri čuvanju', 'error');
-    } finally {
-      this.loading = false;
+      this.showToast('Greška pri ažuriranju dana', 'error');
     }
+    this.cdr.markForCheck();
   }
 
-  onQuickAddCancelled(): void {
-    this.showQuickAddModal = false;
-    document.body.style.overflow = 'auto';
-  }
-
-  /* ---------- BRISANJE ---------- */
+  /* ---------- DELETE ---------- */
   onDeleteRequested(booking: Booking): void {
-    this.selectedBooking = booking;
+    this.bookingToDelete = booking;
     this.showDeleteModal = true;
+    this.cdr.markForCheck();
+  }
+
+  async onDeleteConfirmed(): Promise<void> {
+    if (!this.bookingToDelete) return;
+    this.showDeleteModal = false;
+    try {
+      await this.adminService.deleteBookingAndNotify(this.bookingToDelete.id);
+      this.showToast('Termin je obrisan', 'success');
+    } catch {
+      this.showToast('Greška pri brisanju termina', 'error');
+    }
+    this.bookingToDelete = null;
+    this.cdr.markForCheck();
   }
 
   onDeleteCancelled(): void {
     this.showDeleteModal = false;
-    this.selectedBooking = null;
+    this.bookingToDelete = null;
+    this.cdr.markForCheck();
   }
 
-  async onDeleteConfirmed(): Promise<void> {
-    if (!this.selectedBooking) return;
-    const booking = this.selectedBooking;
-    this.onDeleteCancelled();
-
-    this.runWithPin(async () => {
-      await this.adminService.deleteBookingAndNotify(booking);
-      this.bookings = this.bookings.filter((b) => b.id !== booking.id);
-      this.showToast('Termin obrisan');
-    });
+  /* ---------- QUICK ADD ---------- */
+  quickAdd(): void {
+    this.showQuickAddModal = true;
+    this.cdr.markForCheck();
   }
 
-  /* ---------- POMOĆNE METODE ---------- */
-  get filteredAvailableTimes(): string[] {
-    const bookedTimes = new Set(this.bookings.map((b) => b.time));
-    return this.availableTimes.filter((t) => !bookedTimes.has(t));
+  async onQuickAddSaved(data: QuickBookingData): Promise<void> {
+    this.showQuickAddModal = false;
+    try {
+      await this.adminService.addBooking({ ...data, date: this.selectedDay });
+      this.showToast('Termin je dodan', 'success');
+    } catch {
+      this.showToast('Greška pri dodavanju termina', 'error');
+    }
+    this.cdr.markForCheck();
   }
 
+  onQuickAddCancelled(): void {
+    this.showQuickAddModal = false;
+    this.cdr.markForCheck();
+  }
+
+  /* ---------- CALL ---------- */
   onCallCopied(phone: string): void {
-    navigator.clipboard.writeText(phone).then(() => {
-      this.showToast('Broj kopiran: ' + phone);
-    });
+    navigator.clipboard
+      .writeText(phone)
+      .then(() => this.showToast('Broj kopiran', 'success'))
+      .catch(() => {});
   }
 
-  showToast(message: string, type: 'success' | 'error' = 'success'): void {
+  /* ---------- AVAILABLE TIMES ---------- */
+  get filteredAvailableTimes(): string[] {
+    const booked = new Set(this.bookings.map((b) => b.time));
+    return ALL_TIMES.filter((t) => !booked.has(t));
+  }
+
+  /* ---------- TOAST ---------- */
+  private showToast(message: string, type: 'success' | 'error'): void {
     this.toast = { show: true, message, type };
-    setTimeout(() => (this.toast.show = false), 3000);
-  }
-
-  async logout(): Promise<void> {
-    await this.authService.logout();
-    this.router.navigate(['/admin/login']);
+    setTimeout(() => {
+      this.toast = { ...this.toast, show: false };
+      this.cdr.markForCheck();
+    }, 3000);
   }
 }

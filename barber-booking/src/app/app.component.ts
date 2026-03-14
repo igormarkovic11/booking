@@ -4,11 +4,18 @@ import { ToolbarComponent } from './layout/toolbar/toolbar.component';
 import { FooterComponent } from './layout/footer/footer.component';
 import { filter } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { OfflineBannerComponent } from './shared/offline-banner/offline-banner.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToolbarComponent, FooterComponent, CommonModule],
+  imports: [
+    RouterOutlet,
+    ToolbarComponent,
+    FooterComponent,
+    CommonModule,
+    OfflineBannerComponent,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

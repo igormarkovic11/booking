@@ -17,7 +17,6 @@ import {
   onSnapshot,
 } from '@angular/fire/firestore';
 import { BookingService } from '../../../core/services/booking.service';
-import { Subscription } from 'rxjs';
 import { DateSelectorComponent } from './date-selector/date-selector.component';
 import { TimeSelectorComponent } from './time-selector/time-selector.component';
 import {
@@ -49,6 +48,9 @@ export const ALL_TIMES: string[] = [
   '16:30',
   '17:00',
 ];
+
+const SNAPSHOT_RETRY_DELAY_MS = 5000;
+const MAX_SNAPSHOT_RETRIES = 5;
 
 @Component({
   selector: 'app-booking',
@@ -83,10 +85,12 @@ export class BookingComponent implements OnInit, OnDestroy {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  snapshotError = false; // true when snapshot fails and retries are exhausted
 
   private snapshotUnsub?: () => void;
+  private snapshotRetryTimeout?: any;
+  private snapshotRetryCount = 0;
   private midnightInterval: any;
-  private visibilitySub!: Subscription;
   private lastCheckedDate = new Date().toDateString();
 
   constructor(
@@ -97,13 +101,11 @@ export class BookingComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    // Sign in anonymously so Firestore rules allow booking creation
-    // This is invisible to the user — no login screen, no prompt
     await signInAnonymously(this.auth).catch((err) =>
       console.error('Anonymous sign-in failed:', err),
     );
 
-    this.bookingService.cleanupOldBookings();
+    this.bookingService.cleanupOldBookings().catch(() => {});
     await this.generateDates();
 
     if (this.availableDates.length > 0) {
@@ -112,53 +114,82 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     this.setupMidnightTimer();
-    this.setupVisibilityListener();
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   ngOnDestroy(): void {
     this.snapshotUnsub?.();
+    clearTimeout(this.snapshotRetryTimeout);
     clearInterval(this.midnightInterval);
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
   }
 
-  /* ---------- REAL-TIME LISTENER ---------- */
+  /* ---------- REAL-TIME LISTENER with auto-reconnect ---------- */
   private subscribeToBookedTimes(): void {
     this.snapshotUnsub?.();
+    clearTimeout(this.snapshotRetryTimeout);
+    this.snapshotError = false;
 
     const q = query(
       collection(this.firestore, 'bookings'),
       where('date', '==', this.selectedDate),
     );
 
-    this.snapshotUnsub = onSnapshot(q, (snapshot) => {
-      const now = new Date();
-      this.bookedTimes = snapshot.docs
-        .map((doc) => {
-          const data = doc.data() as any;
-          const createdAt = data.createdAt?.toDate?.() ?? new Date();
-          const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
+    this.snapshotUnsub = onSnapshot(
+      q,
+      (snapshot) => {
+        // Success — reset retry counter
+        this.snapshotRetryCount = 0;
+        this.snapshotError = false;
 
-          if (
-            data.status === 'confirmed' ||
-            (data.status === 'pending' && diffMinutes < 15)
-          ) {
-            return data.time;
-          }
-          return null;
-        })
-        .filter((t): t is string => t !== null);
+        const now = new Date();
+        this.bookedTimes = snapshot.docs
+          .map((doc) => {
+            const data = doc.data() as any;
+            const createdAt = data.createdAt?.toDate?.() ?? new Date();
+            const diffMinutes =
+              (now.getTime() - createdAt.getTime()) / 1000 / 60;
+            if (
+              data.status === 'confirmed' ||
+              (data.status === 'pending' && diffMinutes < 15)
+            )
+              return data.time;
+            return null;
+          })
+          .filter((t): t is string => t !== null);
 
-      this.cdr.markForCheck();
-    });
+        this.cdr.markForCheck();
+      },
+      (error) => {
+        console.error('Snapshot error:', error);
+
+        if (this.snapshotRetryCount < MAX_SNAPSHOT_RETRIES) {
+          this.snapshotRetryCount++;
+          // Exponential backoff: 5s, 10s, 20s, 40s, 80s
+          const delay =
+            SNAPSHOT_RETRY_DELAY_MS * Math.pow(2, this.snapshotRetryCount - 1);
+          this.snapshotRetryTimeout = setTimeout(() => {
+            this.subscribeToBookedTimes();
+          }, delay);
+        } else {
+          // All retries exhausted — show error state in UI
+          this.snapshotError = true;
+          this.cdr.markForCheck();
+        }
+      },
+    );
   }
 
-  /* ---------- VISIBILITY LISTENER ---------- */
-  private setupVisibilityListener(): void {
-    document.addEventListener('visibilitychange', this.onVisibilityChange);
+  /* Manual retry (user clicks "Pokušaj ponovo") */
+  retrySnapshot(): void {
+    this.snapshotRetryCount = 0;
+    this.subscribeToBookedTimes();
   }
 
+  /* ---------- VISIBILITY ---------- */
   private onVisibilityChange = async (): Promise<void> => {
     if (document.visibilityState !== 'visible') return;
+    this.snapshotRetryCount = 0;
     if (this.selectedDate) this.subscribeToBookedTimes();
     await this.generateDates();
     this.cdr.markForCheck();
@@ -190,20 +221,19 @@ export class BookingComponent implements OnInit, OnDestroy {
   async onDateChanged(date: string): Promise<void> {
     this.selectedDate = date;
     this.selectedTime = null;
+    this.snapshotRetryCount = 0;
     this.subscribeToBookedTimes();
   }
 
   /* ---------- TERMINI ---------- */
   get filteredTimes(): string[] {
     if (!this.selectedDate) return [];
-
     const now = new Date();
     const todayStr = now.toLocaleDateString('sv-SE');
     if (this.selectedDate !== todayStr) return ALL_TIMES;
 
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-
     return ALL_TIMES.filter((time) => {
       const [hour, minute] = time.split(':').map(Number);
       return (
@@ -222,7 +252,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     return this.services.filter((s) => s.selected).map((s) => s.label);
   }
 
-  /* ---------- SUBMIT ---------- */
+  /* ---------- SUBMIT with retry ---------- */
   async onFormSubmitted(formData: BookingFormData): Promise<void> {
     this.errorMessage = '';
 
@@ -238,7 +268,6 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.errorMessage = 'Unesi validan email';
       return;
     }
-
     const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/;
     if (formData.phone.trim().length < 9 || !phoneRegex.test(formData.phone)) {
       this.errorMessage = 'Unesite ispravan broj telefona (min. 9 cifara)';
@@ -248,33 +277,49 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.cdr.markForCheck();
 
-    try {
-      const isAvailable = await this.bookingService.isSlotAvailable(
-        this.selectedDate,
-        this.selectedTime!,
-      );
+    const MAX_RETRIES = 2;
+    let attempt = 0;
 
-      if (!isAvailable) {
-        this.errorMessage = 'Termin je upravo zauzet 😕';
-        return;
+    while (attempt <= MAX_RETRIES) {
+      try {
+        const isAvailable = await this.bookingService.isSlotAvailable(
+          this.selectedDate,
+          this.selectedTime!,
+        );
+
+        if (!isAvailable) {
+          this.errorMessage = 'Termin je upravo zauzet 😕';
+          break;
+        }
+
+        await this.bookingService.createBooking({
+          date: this.selectedDate,
+          time: this.selectedTime!,
+          services: this.getSelectedServices(),
+          ...formData,
+        });
+
+        this.successMessage = `Poslali smo ti link za potvrdu na ${formData.email}. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.`;
+        this.resetForm();
+        break;
+      } catch (error: any) {
+        attempt++;
+        if (attempt > MAX_RETRIES) {
+          if (!navigator.onLine) {
+            this.errorMessage =
+              'Nema internet konekcije. Provjeri mrežu i pokušaj ponovo.';
+          } else {
+            this.errorMessage = 'Došlo je do greške. Pokušajte ponovo.';
+          }
+        } else {
+          // Wait 1s before retrying
+          await new Promise((res) => setTimeout(res, 1000));
+        }
       }
-
-      await this.bookingService.createBooking({
-        date: this.selectedDate,
-        time: this.selectedTime!,
-        services: this.getSelectedServices(),
-        ...formData,
-      });
-
-      this.successMessage = `Poslali smo ti link za potvrdu na ${formData.email}. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.`;
-      this.resetForm();
-    } catch (error) {
-      console.error('Greška pri čuvanju:', error);
-      this.errorMessage = 'Došlo je do greške. Pokušajte ponovo.';
-    } finally {
-      this.loading = false;
-      this.cdr.markForCheck();
     }
+
+    this.loading = false;
+    this.cdr.markForCheck();
   }
 
   onSuccessClosed(): void {
@@ -310,10 +355,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   private async checkAndRefreshDate(): Promise<void> {
     const todayStr = new Date().toDateString();
     if (this.lastCheckedDate === todayStr) return;
-
     this.lastCheckedDate = todayStr;
     await this.generateDates();
-
     if (!this.availableDates.includes(this.selectedDate)) {
       this.selectedDate = this.availableDates[0];
       this.subscribeToBookedTimes();

@@ -34,20 +34,21 @@
       ⚠️ DAN JE OZNAČEN KAO NERADNI
     </div>
 
-    <app-booking-list
-      [bookings]="bookings"
-      [loading]="loading"
-      (delete)="onDeleteRequested($event)"
-      (call)="onCallCopied($event)"
-    />
+    <div class="load-error" *ngIf="loadError; else bookingListTpl">
+      <span>⚠️ Nije moguće učitati podatke.</span>
+      <button class="retry-btn" (click)="retryLoad()">🔄 Pokušaj ponovo</button>
+    </div>
+
+    <ng-template #bookingListTpl>
+      <app-booking-list
+        [bookings]="bookings"
+        [loading]="loading"
+        (delete)="onDeleteRequested($event)"
+        (call)="onCallCopied($event)"
+      />
+    </ng-template>
   </div>
 </div>
-
-<app-pin-modal
-  [visible]="showPinModal"
-  (confirmed)="onPinConfirmed($event)"
-  (cancelled)="onPinCancelled()"
-/>
 
 <app-delete-modal
   [visible]="showDeleteModal"

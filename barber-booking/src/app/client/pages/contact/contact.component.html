@@ -1,15 +1,11 @@
 <section class="contact">
   <div class="map-wrapper">
-    <div class="map">
-      <iframe
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1001.6802273173405!2d19.22012370273862!3d44.7567533227675!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x475be8e2c082f4e3%3A0x732e9c078bb7d947!2z0KXQvtGC0LXQuyDQlNGA0LjQvdCw!5e0!3m2!1ssr!2srs!4v1768527717660!5m2!1ssr!2srs"
-        width="600"
-        height="450"
-        style="border: 0"
-        allowfullscreen=""
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"
-      ></iframe>
+    <!-- Iframe is injected here by the component only when visible -->
+    <div class="map" #mapContainer>
+      <div class="map-placeholder">
+        <span>📍</span>
+        <p>Mapa se učitava...</p>
+      </div>
     </div>
   </div>
 
@@ -17,9 +13,9 @@
   <div class="info">
     <div class="block fade-in">
       <h3>Kontakt</h3>
-      <p>📞 +387 61 123 456</p>
-      <p>✉️ {{ "info@barbershop.ba" }}</p>
-      <p>📍 Ulica Frizerska 12, Banja Luka</p>
+      <p>📞 +381 21 123 456</p>
+      <p>✉️ {{ "info@hairstylevidakovic.rs" }}</p>
+      <p>📍 Novi Sad</p>
     </div>
 
     <div class="block fade-in">
