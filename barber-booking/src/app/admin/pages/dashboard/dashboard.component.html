@@ -1,5 +1,5 @@
 <div class="admin-page">
-  <div class="admin-card main-panel">
+  <div class="admin-card">
     <div class="admin-header">
       <div class="top-row">
         <h2>Pregled termina</h2>
@@ -11,7 +11,6 @@
           >
             {{ isCurrentDayOff ? "🔓 Otvori dan" : "🚫 Zatvori dan" }}
           </button>
-
           <button
             class="add-btn"
             (click)="quickAdd()"
@@ -23,18 +22,11 @@
       </div>
 
       <div class="date-row">
-        <div class="date-navigator">
-          <button (click)="changeDate(-1)">◀</button>
-
-          <input
-            type="date"
-            [(ngModel)]="selectedDay"
-            (change)="onDateChange()"
-            class="calendar-input"
-          />
-
-          <button (click)="changeDate(1)">▶</button>
-        </div>
+        <app-date-navigator
+          [date]="selectedDay"
+          (dateChange)="onDateChanged($event)"
+          (stepped)="onDateStepped($event)"
+        />
       </div>
     </div>
 
@@ -42,144 +34,34 @@
       ⚠️ DAN JE OZNAČEN KAO NERADNI
     </div>
 
-    <div class="bookings-list">
-      <div *ngIf="loading" class="loader">Učitavanje...</div>
-
-      <div class="no-data" *ngIf="!loading && bookings.length === 0">
-        Nema rezervacija za ovaj dan.
-      </div>
-
-      <div class="booking-row" *ngFor="let b of bookings">
-        <div class="time-box">{{ b.time }}</div>
-        <div class="info-box">
-          <span class="client-name">{{ b.name }}</span>
-          <span class="client-services">{{ b.services.join(", ") }}</span>
-        </div>
-        <div class="actions-box">
-          <a
-            [href]="'tel:' + b.phone"
-            class="action-btn call"
-            (click)="copyToClipboard(b.phone)"
-            title="Pozovi i kopiraj broj"
-          >
-            📞
-          </a>
-          <button (click)="confirmDelete(b)" class="action-btn delete">
-            🗑️
-          </button>
-        </div>
-      </div>
+    <div class="load-error" *ngIf="loadError; else bookingListTpl">
+      <span>⚠️ Nije moguće učitati podatke.</span>
+      <button class="retry-btn" (click)="retryLoad()">🔄 Pokušaj ponovo</button>
     </div>
-  </div>
-</div>
 
-<div class="modal-overlay" *ngIf="showPinModal">
-  <div class="admin-card modal-content pin-modal">
-    <h3>Autorizacija</h3>
-    <p>Unesite PIN za nastavak</p>
-    <input
-      type="password"
-      [(ngModel)]="tempPin"
-      class="pin-input"
-      maxlength="4"
-      (keyup.enter)="confirmActionWithPin()"
-      placeholder="****"
-    />
-    <div class="modal-actions">
-      <button class="action-btn cancel" (click)="closePinModal()">
-        Odustani
-      </button>
-      <button class="add-btn" (click)="confirmActionWithPin()">Potvrdi</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="showDeleteModal">
-  <div class="admin-card modal-content delete-modal">
-    <div class="modal-icon">⚠️</div>
-    <h3>Brisanje termina</h3>
-    <p>Jeste li sigurni? Klijent će dobiti email obaveštenje o otkazivanju.</p>
-    <div class="modal-actions">
-      <button class="action-btn cancel" (click)="closeDeleteModal()">
-        Odustani
-      </button>
-      <button class="action-btn delete-confirm" (click)="executeDelete()">
-        Obriši
-      </button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" *ngIf="showQuickAddModal">
-  <div class="admin-card modal-content quick-add-modal">
-    <h3>Novo zakazivanje</h3>
-    <div class="form-group">
-      <label class="input-label">Ime klijenta</label>
-      <input
-        type="text"
-        [(ngModel)]="newBooking.name"
-        class="admin-input-field"
-        placeholder="Unesite ime..."
+    <ng-template #bookingListTpl>
+      <app-booking-list
+        [bookings]="bookings"
+        [loading]="loading"
+        (delete)="onDeleteRequested($event)"
+        (call)="onCallCopied($event)"
       />
-
-      <label class="input-label">Telefon (opciono)</label>
-      <input
-        type="tel"
-        [(ngModel)]="newBooking.phone"
-        class="admin-input-field"
-        placeholder="06x..."
-      />
-
-      <label class="input-label">Email (za obaveštenja)</label>
-      <input
-        type="email"
-        [(ngModel)]="newBooking.email"
-        class="admin-input-field"
-        placeholder="klijent@mail.com"
-      />
-
-      <label class="input-label">Izaberi vreme</label>
-      <div class="time-grid">
-        <button
-          *ngFor="let t of filteredAvailableTimes"
-          [class.selected]="newBooking.time === t"
-          (click)="newBooking.time = t"
-          class="time-chip"
-        >
-          {{ t }}
-        </button>
-      </div>
-
-      <label class="input-label">Usluge</label>
-      <div class="service-chips">
-        <button
-          *ngFor="let s of allServices"
-          [class.active]="newBooking.services.includes(s)"
-          (click)="toggleService(s)"
-          class="service-chip"
-        >
-          {{ s }}
-        </button>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="action-btn cancel" (click)="closeQuickAdd()">
-        Odustani
-      </button>
-      <button class="add-btn" (click)="saveQuickBooking()">
-        Kreiraj termin
-      </button>
-    </div>
+    </ng-template>
   </div>
 </div>
 
-<div
-  class="toast"
-  [class.show]="notification.show"
-  [class.error]="notification.type === 'error'"
->
-  <span class="toast-icon">{{
-    notification.type === "success" ? "✅" : "❌"
-  }}</span>
-  <span class="toast-msg">{{ notification.message }}</span>
-</div>
+<app-delete-modal
+  [visible]="showDeleteModal"
+  (confirmed)="onDeleteConfirmed()"
+  (cancelled)="onDeleteCancelled()"
+/>
+
+<app-quick-add-modal
+  [visible]="showQuickAddModal"
+  [availableTimes]="filteredAvailableTimes"
+  (saved)="onQuickAddSaved($event)"
+  (cancelled)="onQuickAddCancelled()"
+/>
+
+<app-toast [state]="toast" />
+<app-booking-notification />

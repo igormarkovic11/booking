@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { BookingService } from '../../../core/services/booking.service';
+import { Auth, signInAnonymously, authState } from '@angular/fire/auth';
+import { firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-confirm',
@@ -22,9 +25,18 @@ export class ConfirmComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private bookingService: BookingService,
+    private auth: Auth,
   ) {}
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
+    await signInAnonymously(this.auth).catch(() => {});
+
+    // Wait until Firebase confirms the auth state is ready
+    // (signInAnonymously resolves before the token is fully propagated)
+    await firstValueFrom(
+      authState(this.auth).pipe(filter((user) => user !== null)),
+    );
+
     const bookingId = this.route.snapshot.queryParamMap.get('bookingId');
     const token = this.route.snapshot.queryParamMap.get('token');
 

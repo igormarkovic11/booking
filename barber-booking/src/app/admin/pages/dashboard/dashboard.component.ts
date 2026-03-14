@@ -1,238 +1,308 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  Firestore,
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from '@angular/fire/firestore';
+import { DateNavigatorComponent } from '../../../shared/date-navigator/date-navigator.component';
+import {
+  ToastComponent,
+  ToastState,
+} from '../../../shared/toast/toast.component';
+import { DeleteModalComponent } from '../../../shared/modals/delete-modal/delete-modal.component';
+import {
+  QuickAddModalComponent,
+  QuickBookingData,
+} from '../../../shared/modals/quick-add-modal/quick-add-modal.component';
+import {
+  Booking,
+  BookingListComponent,
+} from '../../../shared/booking-list/booking-list.component';
 import { AdminService } from '../../../core/services/admin.service';
+import { BookingService } from '../../../core/services/booking.service';
+import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
+import { BookingNotificationComponent } from '../../../shared/booking-notification/booking-notification.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    DateNavigatorComponent,
+    BookingListComponent,
+    ToastComponent,
+    DeleteModalComponent,
+    QuickAddModalComponent,
+    BookingNotificationComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  // Koristimo inject umjesto konstruktora za stabilniji rad sa Firebase-om
-  private adminService = inject(AdminService);
+  @ViewChild(BookingNotificationComponent, { static: true })
+  notifComponent!: BookingNotificationComponent;
 
-  bookings: any[] = [];
-  selectedDay: string = new Date().toISOString().split('T')[0];
+  bookings: Booking[] = [];
   loading = false;
+  loadError = false;
+  selectedDay = new Date().toLocaleDateString('sv-SE');
   isCurrentDayOff = false;
+  dayOffs: string[] = [];
 
-  // Modali state
-  showPinModal = false;
   showDeleteModal = false;
   showQuickAddModal = false;
+  bookingToDelete: Booking | null = null;
 
-  tempPin = '';
-  selectedBooking: any = null;
-  pendingAction: (() => void) | null = null;
-  notification = { show: false, message: '', type: 'success' };
+  toast: ToastState = { show: false, message: '', type: 'success' };
 
-  // Podaci za formu
-  availableTimes = [
-    '08:00',
-    '08:30',
-    '09:00',
-    '09:30',
-    '10:00',
-    '10:30',
-    '11:00',
-    '11:30',
-    '12:00',
-    '12:30',
-    '13:00',
-    '13:30',
-    '14:00',
-    '14:30',
-    '15:00',
-    '15:30',
-    '16:00',
-    '16:30',
-    '17:00',
-  ];
-  allServices = ['Šišanje', 'Brijanje', 'Stilizovanje', 'Trimovanje'];
-  newBooking = {
-    name: '',
-    phone: '',
-    email: '',
-    time: '',
-    services: [] as string[],
-  };
+  private snapshotUnsub?: () => void;
+  private snapshotRetryTimeout?: any;
+  private snapshotRetryCount = 0;
+  private readonly MAX_RETRIES = 5;
+  private isFirstSnapshot = true;
+  private knownBookingIds = new Set<string>();
 
-  ngOnInit() {
-    this.loadAdminData();
+  private globalSnapshotUnsub?: () => void;
+  private globalKnownIds = new Set<string>();
+  private isFirstGlobalSnapshot = true;
+
+  constructor(
+    private adminService: AdminService,
+    private bookingService: BookingService,
+    private firestore: Firestore,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  async ngOnInit(): Promise<void> {
+    await this.loadAdminData();
+    this.subscribeToBookings();
+    this.subscribeToAllBookingsForNotifications();
   }
 
   ngOnDestroy(): void {
-    document.body.style.overflow = 'auto';
+    this.snapshotUnsub?.();
+    this.globalSnapshotUnsub?.();
+    clearTimeout(this.snapshotRetryTimeout);
   }
 
-  // Glavna funkcija koja osvježava sve na promjenu datuma
-  async loadAdminData() {
+  async loadAdminData(): Promise<void> {
     this.loading = true;
+    this.loadError = false;
+    this.cdr.markForCheck();
     try {
-      // 1. Učitaj rezervacije
-      this.bookings = await this.adminService.getBookingsForDate(
-        this.selectedDay,
-      );
-      // 2. Provjeri da li je taj dan neradni u bazi
-      this.isCurrentDayOff = await this.adminService.checkIfDayOff(
-        this.selectedDay,
-      );
-    } catch (error) {
-      this.showToast('Greška pri učitavanju podataka', 'error');
+      this.dayOffs = await this.bookingService.getDayOffs();
+      this.isCurrentDayOff = this.dayOffs.includes(this.selectedDay);
+    } catch (err) {
+      console.error('Greška pri učitavanju podataka:', err);
+      this.loadError = true;
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
-  // --- NAVIGACIJA ---
-  changeDate(days: number) {
-    const d = new Date(this.selectedDay);
-    d.setDate(d.getDate() + days);
-    this.selectedDay = d.toISOString().split('T')[0];
-    this.loadAdminData();
+  async retryLoad(): Promise<void> {
+    await this.loadAdminData();
+    if (!this.loadError) this.subscribeToBookings();
   }
 
-  onDateChange() {
-    this.loadAdminData();
-  }
+  private subscribeToBookings(): void {
+    this.snapshotUnsub?.();
+    clearTimeout(this.snapshotRetryTimeout);
+    this.isFirstSnapshot = true;
+    this.knownBookingIds.clear();
 
-  // --- LOGIKA ZA PIN ---
-  runWithPin(action: () => void) {
-    this.pendingAction = action;
-    this.showPinModal = true;
-  }
+    const q = query(
+      collection(this.firestore, 'bookings'),
+      where('date', '==', this.selectedDay),
+      where('status', '==', 'confirmed'),
+    );
 
-  async confirmActionWithPin() {
-    this.loading = true;
-    const isValid = await this.adminService.verifyPin(this.tempPin);
-
-    if (isValid) {
-      if (this.pendingAction) {
-        try {
-          await this.pendingAction();
-        } catch (e) {
-          this.showToast('Greška pri izvršavanju!', 'error');
+    this.snapshotUnsub = onSnapshot(
+      q,
+      (snapshot) => {
+        this.snapshotRetryCount = 0;
+        const incoming = snapshot.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Omit<Booking, 'id'>),
+        }));
+        if (this.isFirstSnapshot) {
+          this.isFirstSnapshot = false;
+          incoming.forEach((b) => this.knownBookingIds.add(b.id));
+        } else {
+          const incomingIds = new Set(incoming.map((b) => b.id));
+          this.knownBookingIds.forEach((id) => {
+            if (!incomingIds.has(id)) this.knownBookingIds.delete(id);
+          });
+          incoming.forEach((b) => this.knownBookingIds.add(b.id));
         }
+        this.bookings = incoming;
+        this.cdr.markForCheck();
+      },
+      (error) => {
+        console.error('Dashboard snapshot error:', error);
+        if (this.snapshotRetryCount < this.MAX_RETRIES) {
+          this.snapshotRetryCount++;
+          const delay = 5000 * Math.pow(2, this.snapshotRetryCount - 1);
+          this.snapshotRetryTimeout = setTimeout(
+            () => this.subscribeToBookings(),
+            delay,
+          );
+        } else {
+          this.loadError = true;
+          this.cdr.markForCheck();
+        }
+      },
+    );
+  }
+
+  private subscribeToAllBookingsForNotifications(): void {
+    this.globalSnapshotUnsub?.();
+    this.isFirstGlobalSnapshot = true;
+    this.globalKnownIds.clear();
+
+    const today = new Date().toLocaleDateString('sv-SE');
+
+    const q = query(
+      collection(this.firestore, 'bookings'),
+      where('date', '>=', today),
+      where('status', '==', 'confirmed'),
+    );
+
+    this.globalSnapshotUnsub = onSnapshot(q, (snapshot) => {
+      if (this.isFirstGlobalSnapshot) {
+        this.isFirstGlobalSnapshot = false;
+        snapshot.docs.forEach((d) => this.globalKnownIds.add(d.id));
+        return;
       }
-      this.closePinModal();
-    } else {
-      this.showToast('Pogrešan PIN!', 'error');
-      this.tempPin = '';
-    }
-    this.loading = false;
-  }
 
-  closePinModal() {
-    this.showPinModal = false;
-    this.tempPin = '';
-    this.pendingAction = null;
-  }
-
-  // --- NERADNI DAN (DAY OFF) ---
-  async toggleDayOff() {
-    this.runWithPin(async () => {
-      try {
-        const newState = !this.isCurrentDayOff;
-        await this.adminService.toggleDayOff(this.selectedDay, newState);
-        this.isCurrentDayOff = newState;
-        this.showToast(newState ? 'Dan je zatvoren' : 'Dan je ponovo otvoren');
-      } catch (e) {
-        this.showToast('Greška pri promeni statusa dana', 'error');
-      }
-    });
-  }
-
-  // --- REZERVACIJE (DODAVANJE I BRISANJE) ---
-  quickAdd() {
-    this.runWithPin(() => {
-      this.showQuickAddModal = true;
-      document.body.style.overflow = 'hidden'; // DODAJ OVO
-    });
-  }
-
-  async saveQuickBooking() {
-    if (!this.newBooking.name || !this.newBooking.time) {
-      this.showToast('Ime i vrijeme su obavezni!', 'error');
-      return;
-    }
-
-    this.loading = true;
-    try {
-      await this.adminService.addBooking({
-        ...this.newBooking,
-        date: this.selectedDay,
-        status: 'confirmed',
+      snapshot.docs.forEach((d) => {
+        if (!this.globalKnownIds.has(d.id)) {
+          this.globalKnownIds.add(d.id);
+          const data = d.data() as any;
+          this.notifComponent?.notify({
+            id: d.id,
+            name: data.name,
+            time: data.time,
+            services: data.services ?? [],
+          });
+        }
       });
-      this.showToast('Termin uspješno dodat!');
-      await this.loadAdminData();
-      this.closeQuickAdd();
-    } catch (error) {
-      this.showToast('Greška pri čuvanju', 'error');
-    } finally {
-      this.loading = false;
-    }
+
+      const incomingIds = new Set(snapshot.docs.map((d) => d.id));
+      this.globalKnownIds.forEach((id) => {
+        if (!incomingIds.has(id)) this.globalKnownIds.delete(id);
+      });
+    });
   }
 
-  confirmDelete(booking: any) {
-    this.selectedBooking = booking;
+  async onDateChanged(date: string): Promise<void> {
+    this.selectedDay = date;
+    this.isCurrentDayOff = this.dayOffs.includes(date);
+    this.snapshotRetryCount = 0;
+    this.subscribeToBookings();
+    this.cdr.markForCheck();
+  }
+
+  onDateStepped(direction: number): void {
+    const d = new Date(this.selectedDay);
+    d.setDate(d.getDate() + direction);
+    this.onDateChanged(d.toLocaleDateString('sv-SE'));
+  }
+
+  async toggleDayOff(): Promise<void> {
+    try {
+      await this.bookingService.toggleDayOff(
+        this.selectedDay,
+        !this.isCurrentDayOff,
+      );
+      this.isCurrentDayOff = !this.isCurrentDayOff;
+      if (this.isCurrentDayOff) {
+        this.dayOffs.push(this.selectedDay);
+      } else {
+        this.dayOffs = this.dayOffs.filter((d) => d !== this.selectedDay);
+      }
+      this.showToast('Dan je ažuriran', 'success');
+    } catch {
+      this.showToast('Greška pri ažuriranju dana', 'error');
+    }
+    this.cdr.markForCheck();
+  }
+
+  onDeleteRequested(booking: Booking): void {
+    this.bookingToDelete = booking;
     this.showDeleteModal = true;
+    this.cdr.markForCheck();
   }
 
-  async executeDelete() {
-    if (!this.selectedBooking) return;
-    const bookingToProcess = this.selectedBooking;
-    this.closeDeleteModal();
-
-    this.runWithPin(async () => {
-      await this.adminService.deleteBookingAndNotify(bookingToProcess);
-      this.bookings = this.bookings.filter((b) => b.id !== bookingToProcess.id);
-      this.showToast('Termin obrisan');
-    });
-  }
-
-  // --- POMOĆNE METODE ---
-  get filteredAvailableTimes() {
-    const bookedTimes = this.bookings.map((b) => b.time);
-    return this.availableTimes.filter((t) => !bookedTimes.includes(t));
-  }
-
-  toggleService(service: string) {
-    const index = this.newBooking.services.indexOf(service);
-    if (index > -1) {
-      this.newBooking.services.splice(index, 1);
-    } else {
-      this.newBooking.services.push(service);
-    }
-  }
-
-  closeDeleteModal() {
+  async onDeleteConfirmed(): Promise<void> {
+    if (!this.bookingToDelete) return;
     this.showDeleteModal = false;
-    this.selectedBooking = null;
+    try {
+      await this.adminService.deleteBookingAndNotify(this.bookingToDelete.id);
+      this.showToast('Termin je obrisan', 'success');
+    } catch {
+      this.showToast('Greška pri brisanju termina', 'error');
+    }
+    this.bookingToDelete = null;
+    this.cdr.markForCheck();
   }
 
-  closeQuickAdd() {
+  onDeleteCancelled(): void {
+    this.showDeleteModal = false;
+    this.bookingToDelete = null;
+    this.cdr.markForCheck();
+  }
+
+  quickAdd(): void {
+    this.showQuickAddModal = true;
+    this.cdr.markForCheck();
+  }
+
+  async onQuickAddSaved(data: QuickBookingData): Promise<void> {
     this.showQuickAddModal = false;
-    document.body.style.overflow = 'auto'; // DODAJ OVO
-    this.newBooking = {
-      name: '',
-      phone: '',
-      email: '',
-      time: '',
-      services: [],
-    };
+    try {
+      await this.adminService.addBooking({ ...data, date: this.selectedDay });
+      this.showToast('Termin je dodan', 'success');
+    } catch {
+      this.showToast('Greška pri dodavanju termina', 'error');
+    }
+    this.cdr.markForCheck();
   }
 
-  showToast(msg: string, type: string = 'success') {
-    this.notification = { show: true, message: msg, type };
-    setTimeout(() => (this.notification.show = false), 3000);
+  onQuickAddCancelled(): void {
+    this.showQuickAddModal = false;
+    this.cdr.markForCheck();
   }
 
-  copyToClipboard(phone: string) {
-    navigator.clipboard.writeText(phone).then(() => {
-      this.showToast('Broj kopiran: ' + phone);
-    });
+  onCallCopied(phone: string): void {
+    navigator.clipboard
+      .writeText(phone)
+      .then(() => this.showToast('Broj kopiran', 'success'))
+      .catch(() => {});
+  }
+
+  get filteredAvailableTimes(): string[] {
+    const booked = new Set(this.bookings.map((b) => b.time));
+    return ALL_TIMES.filter((t) => !booked.has(t));
+  }
+
+  private showToast(message: string, type: 'success' | 'error'): void {
+    this.toast = { show: true, message, type };
+    setTimeout(() => {
+      this.toast = { ...this.toast, show: false };
+      this.cdr.markForCheck();
+    }, 3000);
   }
 }

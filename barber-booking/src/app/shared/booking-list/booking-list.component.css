@@ -1,0 +1,77 @@
+.booking-row {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  .time-box {
+    background: #1976d2;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-right: 15px;
+    color: white;
+  }
+
+  .info-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    color: white;
+
+    .client-name {
+      font-weight: 600;
+    }
+    .client-services {
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+  }
+
+  .actions-box {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+
+  &.delete {
+    color: #ff5252;
+    border: 1px solid #ff5252;
+  }
+
+  &.call {
+    color: #4caf50;
+    border: 1px solid #4caf50;
+  }
+}
+
+.no-data {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 40px 0;
+  font-size: 0.95rem;
+}
+
+.loader {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 40px 0;
+}
+
+@media (max-width: 480px) {
+  .action-btn {
+    width: 100%;
+  }
+}

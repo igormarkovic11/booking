@@ -1,5 +1,5 @@
 <mat-toolbar class="toolbar">
-  <a routerLink="/" class="logo-link">
+  <a class="logo-link" (click)="onLogoClick()" style="cursor: pointer">
     <img src="assets/images/logoNoBg.png" alt="Logo" class="nav-logo" />
     <span class="logo">Hairstyle Vidaković</span>
   </a>
@@ -32,6 +32,17 @@
     Zakaži termin
   </button>
 
+  <!-- ADMIN LOGOUT (desktop, only when logged in as admin) -->
+  <button
+    *ngIf="isAdmin$ | async"
+    mat-stroked-button
+    class="logout-btn"
+    (click)="logout()"
+  >
+    <mat-icon>logout</mat-icon>
+    <span>Odjavi se</span>
+  </button>
+
   <!-- HAMBURGER (MOBILE) -->
   <button mat-icon-button class="menu-btn" (click)="toggleMenu()">
     <mat-icon>menu</mat-icon>
@@ -60,4 +71,14 @@
   >
     Zakaži termin
   </a>
+
+  <!-- ADMIN LOGOUT (mobile, only when logged in as admin) -->
+  <button
+    *ngIf="isAdmin$ | async"
+    class="logout-mobile"
+    (click)="logout(); closeMenu()"
+  >
+    <mat-icon>logout</mat-icon>
+    <span>Odjavi se</span>
+  </button>
 </div>
