@@ -4,6 +4,7 @@ import {
   OnDestroy,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -30,6 +31,7 @@ import {
 import { AdminService } from '../../../core/services/admin.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
+import { BookingNotificationComponent } from '../../../shared/booking-notification/booking-notification.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -47,9 +49,12 @@ import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  @ViewChild(BookingNotificationComponent)
+  notifComponent!: BookingNotificationComponent;
+
   bookings: Booking[] = [];
   loading = false;
-  loadError = false; // shows retry button when true
+  loadError = false;
   selectedDay = new Date().toLocaleDateString('sv-SE');
   isCurrentDayOff = false;
   dayOffs: string[] = [];
@@ -64,6 +69,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private snapshotRetryTimeout?: any;
   private snapshotRetryCount = 0;
   private readonly MAX_RETRIES = 5;
+
+  // Track known booking IDs so we can detect genuinely new ones
+  private knownBookingIds = new Set<string>();
+  private isFirstSnapshot = true;
 
   constructor(
     private adminService: AdminService,
@@ -82,15 +91,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     clearTimeout(this.snapshotRetryTimeout);
   }
 
-  /* ---------- INITIAL DATA LOAD with retry ---------- */
+  /* ---------- INITIAL DATA LOAD ---------- */
   async loadAdminData(): Promise<void> {
     this.loading = true;
     this.loadError = false;
     this.cdr.markForCheck();
 
     try {
-      const [dayOffs] = await Promise.all([this.bookingService.getDayOffs()]);
-      this.dayOffs = dayOffs;
+      this.dayOffs = await this.bookingService.getDayOffs();
       this.isCurrentDayOff = this.dayOffs.includes(this.selectedDay);
     } catch (err) {
       console.error('Greška pri učitavanju podataka:', err);
@@ -101,16 +109,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /* Manual retry triggered by "Pokušaj ponovo" button */
   async retryLoad(): Promise<void> {
     await this.loadAdminData();
     if (!this.loadError) this.subscribeToBookings();
   }
 
-  /* ---------- REAL-TIME BOOKINGS with auto-reconnect ---------- */
+  /* ---------- REAL-TIME BOOKINGS ---------- */
   private subscribeToBookings(): void {
     this.snapshotUnsub?.();
     clearTimeout(this.snapshotRetryTimeout);
+    this.isFirstSnapshot = true;
+    this.knownBookingIds.clear();
 
     const q = query(
       collection(this.firestore, 'bookings'),
@@ -122,10 +131,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
       q,
       (snapshot) => {
         this.snapshotRetryCount = 0;
-        this.bookings = snapshot.docs.map((d) => ({
+
+        const incoming = snapshot.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<Booking, 'id'>),
         }));
+
+        if (this.isFirstSnapshot) {
+          // First load — just populate known IDs, no notifications
+          this.isFirstSnapshot = false;
+          incoming.forEach((b) => this.knownBookingIds.add(b.id));
+        } else {
+          // Subsequent updates — notify for any genuinely new bookings
+          incoming.forEach((b) => {
+            if (!this.knownBookingIds.has(b.id)) {
+              this.knownBookingIds.add(b.id);
+              this.notifComponent?.notify({
+                id: b.id,
+                name: b.name,
+                time: b.time,
+                services: b.services ?? [],
+              });
+            }
+          });
+
+          // Clean up IDs for deleted bookings
+          const incomingIds = new Set(incoming.map((b) => b.id));
+          this.knownBookingIds.forEach((id) => {
+            if (!incomingIds.has(id)) this.knownBookingIds.delete(id);
+          });
+        }
+
+        this.bookings = incoming;
         this.cdr.markForCheck();
       },
       (error) => {
