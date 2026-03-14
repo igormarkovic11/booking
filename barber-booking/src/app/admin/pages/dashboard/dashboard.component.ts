@@ -49,7 +49,7 @@ import { BookingNotificationComponent } from '../../../shared/booking-notificati
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  @ViewChild(BookingNotificationComponent)
+  @ViewChild(BookingNotificationComponent, { static: true })
   notifComponent!: BookingNotificationComponent;
 
   bookings: Booking[] = [];
