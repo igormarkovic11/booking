@@ -198,6 +198,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       snapshot.docs.forEach((d) => {
         if (!this.globalKnownIds.has(d.id)) {
           console.log('NEW booking detected:', d.id, d.data());
+          console.log('notifComponent:', this.notifComponent); // ADD THIS
           this.globalKnownIds.add(d.id);
           const data = d.data() as any;
           this.notifComponent?.notify({
