@@ -44,6 +44,7 @@ import { BookingNotificationComponent } from '../../../shared/booking-notificati
     ToastComponent,
     DeleteModalComponent,
     QuickAddModalComponent,
+    BookingNotificationComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
