@@ -69,10 +69,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private snapshotRetryTimeout?: any;
   private snapshotRetryCount = 0;
   private readonly MAX_RETRIES = 5;
-
-  // Track known booking IDs so we can detect genuinely new ones
-  private knownBookingIds = new Set<string>();
   private isFirstSnapshot = true;
+  private knownBookingIds = new Set<string>();
+
+  private globalSnapshotUnsub?: () => void;
+  private globalKnownIds = new Set<string>();
+  private isFirstGlobalSnapshot = true;
 
   constructor(
     private adminService: AdminService,
@@ -84,19 +86,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     await this.loadAdminData();
     this.subscribeToBookings();
+    this.subscribeToAllBookingsForNotifications();
   }
 
   ngOnDestroy(): void {
     this.snapshotUnsub?.();
+    this.globalSnapshotUnsub?.();
     clearTimeout(this.snapshotRetryTimeout);
   }
 
-  /* ---------- INITIAL DATA LOAD ---------- */
   async loadAdminData(): Promise<void> {
     this.loading = true;
     this.loadError = false;
     this.cdr.markForCheck();
-
     try {
       this.dayOffs = await this.bookingService.getDayOffs();
       this.isCurrentDayOff = this.dayOffs.includes(this.selectedDay);
@@ -114,7 +116,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.loadError) this.subscribeToBookings();
   }
 
-  /* ---------- REAL-TIME BOOKINGS ---------- */
   private subscribeToBookings(): void {
     this.snapshotUnsub?.();
     clearTimeout(this.snapshotRetryTimeout);
@@ -131,37 +132,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
       q,
       (snapshot) => {
         this.snapshotRetryCount = 0;
-
         const incoming = snapshot.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Omit<Booking, 'id'>),
         }));
-
         if (this.isFirstSnapshot) {
-          // First load — just populate known IDs, no notifications
           this.isFirstSnapshot = false;
           incoming.forEach((b) => this.knownBookingIds.add(b.id));
         } else {
-          // Subsequent updates — notify for any genuinely new bookings
-          incoming.forEach((b) => {
-            if (!this.knownBookingIds.has(b.id)) {
-              this.knownBookingIds.add(b.id);
-              this.notifComponent?.notify({
-                id: b.id,
-                name: b.name,
-                time: b.time,
-                services: b.services ?? [],
-              });
-            }
-          });
-
-          // Clean up IDs for deleted bookings
           const incomingIds = new Set(incoming.map((b) => b.id));
           this.knownBookingIds.forEach((id) => {
             if (!incomingIds.has(id)) this.knownBookingIds.delete(id);
           });
+          incoming.forEach((b) => this.knownBookingIds.add(b.id));
         }
-
         this.bookings = incoming;
         this.cdr.markForCheck();
       },
@@ -182,7 +166,46 @@ export class DashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  /* ---------- DATE ---------- */
+  private subscribeToAllBookingsForNotifications(): void {
+    this.globalSnapshotUnsub?.();
+    this.isFirstGlobalSnapshot = true;
+    this.globalKnownIds.clear();
+
+    const today = new Date().toLocaleDateString('sv-SE');
+
+    const q = query(
+      collection(this.firestore, 'bookings'),
+      where('date', '>=', today),
+      where('status', '==', 'confirmed'),
+    );
+
+    this.globalSnapshotUnsub = onSnapshot(q, (snapshot) => {
+      if (this.isFirstGlobalSnapshot) {
+        this.isFirstGlobalSnapshot = false;
+        snapshot.docs.forEach((d) => this.globalKnownIds.add(d.id));
+        return;
+      }
+
+      snapshot.docs.forEach((d) => {
+        if (!this.globalKnownIds.has(d.id)) {
+          this.globalKnownIds.add(d.id);
+          const data = d.data() as any;
+          this.notifComponent?.notify({
+            id: d.id,
+            name: data.name,
+            time: data.time,
+            services: data.services ?? [],
+          });
+        }
+      });
+
+      const incomingIds = new Set(snapshot.docs.map((d) => d.id));
+      this.globalKnownIds.forEach((id) => {
+        if (!incomingIds.has(id)) this.globalKnownIds.delete(id);
+      });
+    });
+  }
+
   async onDateChanged(date: string): Promise<void> {
     this.selectedDay = date;
     this.isCurrentDayOff = this.dayOffs.includes(date);
@@ -197,7 +220,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.onDateChanged(d.toLocaleDateString('sv-SE'));
   }
 
-  /* ---------- DAY OFF ---------- */
   async toggleDayOff(): Promise<void> {
     try {
       await this.bookingService.toggleDayOff(
@@ -217,7 +239,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /* ---------- DELETE ---------- */
   onDeleteRequested(booking: Booking): void {
     this.bookingToDelete = booking;
     this.showDeleteModal = true;
@@ -243,7 +264,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /* ---------- QUICK ADD ---------- */
   quickAdd(): void {
     this.showQuickAddModal = true;
     this.cdr.markForCheck();
@@ -265,7 +285,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /* ---------- CALL ---------- */
   onCallCopied(phone: string): void {
     navigator.clipboard
       .writeText(phone)
@@ -273,13 +292,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .catch(() => {});
   }
 
-  /* ---------- AVAILABLE TIMES ---------- */
   get filteredAvailableTimes(): string[] {
     const booked = new Set(this.bookings.map((b) => b.time));
     return ALL_TIMES.filter((t) => !booked.has(t));
   }
 
-  /* ---------- TOAST ---------- */
   private showToast(message: string, type: 'success' | 'error'): void {
     this.toast = { show: true, message, type };
     setTimeout(() => {
