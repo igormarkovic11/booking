@@ -73,6 +73,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   selectedDate = '';
   bookedTimes: string[] = [];
   selectedTime: string | null = null;
+  autoAdvanceMessage = ''; // shown when auto-advancing to next date
 
   services: Service[] = [
     { label: 'Šišanje', value: 'sisanje', selected: false },
@@ -92,6 +93,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   private midnightInterval: any;
   private lastCheckedDate = new Date().toDateString();
 
+  // Track which dates have been checked for auto-advance
+  // to avoid infinite loops if all dates are fully booked
+  private autoAdvanceChecked = new Set<string>();
+
   constructor(
     private bookingService: BookingService,
     private firestore: Firestore,
@@ -99,9 +104,6 @@ export class BookingComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    // Auth and dayoffs are already preloaded by AppComponent
-    // so generateDates() hits sessionStorage cache immediately
-    this.bookingService.cleanupOldBookings().catch(() => {});
     await this.generateDates();
 
     if (this.availableDates.length > 0) {
@@ -153,6 +155,7 @@ export class BookingComponent implements OnInit, OnDestroy {
           })
           .filter((t): t is string => t !== null);
 
+        this.checkAndAutoAdvance();
         this.cdr.markForCheck();
       },
       (error) => {
@@ -173,6 +176,58 @@ export class BookingComponent implements OnInit, OnDestroy {
     );
   }
 
+  /* ---------- AUTO-ADVANCE LOGIC ---------- */
+  private checkAndAutoAdvance(): void {
+    // Don't auto-advance if the user manually selected this date
+    if (this.autoAdvanceChecked.has(this.selectedDate)) return;
+    this.autoAdvanceChecked.add(this.selectedDate);
+
+    const available = this.getAvailableTimesForDate(this.selectedDate);
+    if (available.length > 0) {
+      // Current date has free slots — no need to advance
+      this.autoAdvanceMessage = '';
+      return;
+    }
+
+    // Find next date in the list that we haven't checked yet
+    const currentIndex = this.availableDates.indexOf(this.selectedDate);
+    const nextDate = this.availableDates[currentIndex + 1];
+
+    if (nextDate) {
+      this.autoAdvanceMessage = `Nema slobodnih termina, prebačeni ste na sljedeći dostupni datum.`;
+      this.selectedDate = nextDate;
+      this.selectedTime = null;
+      this.subscribeToBookedTimes();
+    } else {
+      // All 3 dates are fully booked
+      this.autoAdvanceMessage = `Svi termini u narednim danima su zauzeti. Molimo pokušajte kasnije.`;
+    }
+  }
+
+  // Returns times that are available (not booked and not in the past)
+  private getAvailableTimesForDate(date: string): string[] {
+    const times = this.getFilteredTimesForDate(date);
+    const booked = new Set(this.bookedTimes);
+    return times.filter((t) => !booked.has(t));
+  }
+
+  // Filters out past times for today, returns all times for future dates
+  private getFilteredTimesForDate(date: string): string[] {
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('sv-SE');
+    if (date !== todayStr) return ALL_TIMES;
+
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    return ALL_TIMES.filter((time) => {
+      const [hour, minute] = time.split(':').map(Number);
+      return (
+        hour > currentHour ||
+        (hour === currentHour && minute > currentMinute + 15)
+      );
+    });
+  }
+
   retrySnapshot(): void {
     this.snapshotRetryCount = 0;
     this.subscribeToBookedTimes();
@@ -182,6 +237,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   private onVisibilityChange = async (): Promise<void> => {
     if (document.visibilityState !== 'visible') return;
     this.snapshotRetryCount = 0;
+    this.autoAdvanceChecked.clear();
     if (this.selectedDate) this.subscribeToBookedTimes();
     await this.generateDates();
     this.cdr.markForCheck();
@@ -211,28 +267,18 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   async onDateChanged(date: string): Promise<void> {
+    // User manually changed date — clear auto-advance message and reset checked set
     this.selectedDate = date;
     this.selectedTime = null;
     this.snapshotRetryCount = 0;
+    this.autoAdvanceMessage = '';
+    this.autoAdvanceChecked.clear();
     this.subscribeToBookedTimes();
   }
 
   /* ---------- TERMINI ---------- */
   get filteredTimes(): string[] {
-    if (!this.selectedDate) return [];
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('sv-SE');
-    if (this.selectedDate !== todayStr) return ALL_TIMES;
-
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    return ALL_TIMES.filter((time) => {
-      const [hour, minute] = time.split(':').map(Number);
-      return (
-        hour > currentHour ||
-        (hour === currentHour && minute > currentMinute + 15)
-      );
-    });
+    return this.getFilteredTimesForDate(this.selectedDate);
   }
 
   /* ---------- USLUGE ---------- */
@@ -334,6 +380,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     await this.generateDates();
     if (!this.availableDates.includes(this.selectedDate)) {
       this.selectedDate = this.availableDates[0];
+      this.autoAdvanceChecked.clear();
       this.subscribeToBookedTimes();
     }
     this.cdr.markForCheck();

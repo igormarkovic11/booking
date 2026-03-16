@@ -18,6 +18,9 @@
         <span>⚠️ Ne možemo učitati zauzetost termina.</span>
         <button (click)="retrySnapshot()">Pokušaj ponovo</button>
       </div>
+      <div class="auto-advance-msg" *ngIf="autoAdvanceMessage">
+        ℹ️ {{ autoAdvanceMessage }}
+      </div>
       <app-time-selector
         [times]="filteredTimes"
         [bookedTimes]="bookedTimes"

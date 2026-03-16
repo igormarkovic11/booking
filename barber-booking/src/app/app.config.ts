@@ -1,7 +1,7 @@
 import {
   ApplicationConfig,
   LOCALE_ID,
-  provideZoneChangeDetection,
+  provideZoneChangeDetection, isDevMode,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -18,6 +18,7 @@ import { environment } from './environments/environment';
 import { registerLocaleData } from '@angular/common';
 import localeSr from '@angular/common/locales/sr-Latn';
 import { getAuth, provideAuth } from '@angular/fire/auth';
+import { provideServiceWorker } from '@angular/service-worker';
 
 registerLocaleData(localeSr);
 
@@ -41,6 +42,9 @@ export const appConfig: ApplicationConfig = {
     ),
 
     provideAnimationsAsync(),
-    { provide: LOCALE_ID, useValue: 'sr-Latn' },
+    { provide: LOCALE_ID, useValue: 'sr-Latn' }, provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          }),
   ],
 };

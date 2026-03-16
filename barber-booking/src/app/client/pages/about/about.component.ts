@@ -1,9 +1,15 @@
-import { AfterViewInit, Component, ElementRef } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 
 @Component({
   selector: 'app-about',
   standalone: true,
   imports: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.component.html',
   styleUrl: './about.component.css',
 })
@@ -22,9 +28,9 @@ export class AboutComponent implements AfterViewInit {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
-    elements.forEach((el: any) => observer.observe(el));
+    elements.forEach((el: Element) => observer.observe(el));
   }
 }
