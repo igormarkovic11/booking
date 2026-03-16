@@ -8,7 +8,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Auth, signInAnonymously } from '@angular/fire/auth';
 import {
   Firestore,
   collection,
@@ -85,7 +84,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   loading = false;
   errorMessage = '';
   successMessage = '';
-  snapshotError = false; // true when snapshot fails and retries are exhausted
+  snapshotError = false;
 
   private snapshotUnsub?: () => void;
   private snapshotRetryTimeout?: any;
@@ -96,15 +95,12 @@ export class BookingComponent implements OnInit, OnDestroy {
   constructor(
     private bookingService: BookingService,
     private firestore: Firestore,
-    private auth: Auth,
     private cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit(): Promise<void> {
-    await signInAnonymously(this.auth).catch((err) =>
-      console.error('Anonymous sign-in failed:', err),
-    );
-
+    // Auth and dayoffs are already preloaded by AppComponent
+    // so generateDates() hits sessionStorage cache immediately
     this.bookingService.cleanupOldBookings().catch(() => {});
     await this.generateDates();
 
@@ -124,7 +120,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
   }
 
-  /* ---------- REAL-TIME LISTENER with auto-reconnect ---------- */
+  /* ---------- REAL-TIME LISTENER ---------- */
   private subscribeToBookedTimes(): void {
     this.snapshotUnsub?.();
     clearTimeout(this.snapshotRetryTimeout);
@@ -138,7 +134,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.snapshotUnsub = onSnapshot(
       q,
       (snapshot) => {
-        // Success — reset retry counter
         this.snapshotRetryCount = 0;
         this.snapshotError = false;
 
@@ -162,17 +157,15 @@ export class BookingComponent implements OnInit, OnDestroy {
       },
       (error) => {
         console.error('Snapshot error:', error);
-
         if (this.snapshotRetryCount < MAX_SNAPSHOT_RETRIES) {
           this.snapshotRetryCount++;
-          // Exponential backoff: 5s, 10s, 20s, 40s, 80s
           const delay =
             SNAPSHOT_RETRY_DELAY_MS * Math.pow(2, this.snapshotRetryCount - 1);
-          this.snapshotRetryTimeout = setTimeout(() => {
-            this.subscribeToBookedTimes();
-          }, delay);
+          this.snapshotRetryTimeout = setTimeout(
+            () => this.subscribeToBookedTimes(),
+            delay,
+          );
         } else {
-          // All retries exhausted — show error state in UI
           this.snapshotError = true;
           this.cdr.markForCheck();
         }
@@ -180,7 +173,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     );
   }
 
-  /* Manual retry (user clicks "Pokušaj ponovo") */
   retrySnapshot(): void {
     this.snapshotRetryCount = 0;
     this.subscribeToBookedTimes();
@@ -252,25 +244,12 @@ export class BookingComponent implements OnInit, OnDestroy {
     return this.services.filter((s) => s.selected).map((s) => s.label);
   }
 
-  /* ---------- SUBMIT with retry ---------- */
+  /* ---------- SUBMIT ---------- */
   async onFormSubmitted(formData: BookingFormData): Promise<void> {
     this.errorMessage = '';
 
     if (!this.selectedDate || !this.selectedTime) {
       this.errorMessage = 'Odaberi datum i termin';
-      return;
-    }
-    if (!formData.name.trim() || !formData.phone.trim()) {
-      this.errorMessage = 'Unesi ime i broj telefona';
-      return;
-    }
-    if (!formData.email.trim() || !this.isValidEmail(formData.email)) {
-      this.errorMessage = 'Unesi validan email';
-      return;
-    }
-    const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/;
-    if (formData.phone.trim().length < 9 || !phoneRegex.test(formData.phone)) {
-      this.errorMessage = 'Unesite ispravan broj telefona (min. 9 cifara)';
       return;
     }
 
@@ -305,14 +284,10 @@ export class BookingComponent implements OnInit, OnDestroy {
       } catch (error: any) {
         attempt++;
         if (attempt > MAX_RETRIES) {
-          if (!navigator.onLine) {
-            this.errorMessage =
-              'Nema internet konekcije. Provjeri mrežu i pokušaj ponovo.';
-          } else {
-            this.errorMessage = 'Došlo je do greške. Pokušajte ponovo.';
-          }
+          this.errorMessage = !navigator.onLine
+            ? 'Nema internet konekcije. Provjeri mrežu i pokušaj ponovo.'
+            : 'Došlo je do greške. Pokušajte ponovo.';
         } else {
-          // Wait 1s before retrying
           await new Promise((res) => setTimeout(res, 1000));
         }
       }
