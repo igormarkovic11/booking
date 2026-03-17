@@ -11,6 +11,7 @@
   },
   "BOOKING": {
     "TITLE": "Book Appointment",
+    "TODAY": "Today",
     "SELECT_DATE": "Select a date",
     "SELECT_TIME": "Select a time",
     "SERVICES_TITLE": "Which services do you want?",
