@@ -96,6 +96,7 @@ export class BookingService {
     name: string;
     phone: string;
     email: string;
+    lang?: string;
   }) {
     const token = this.generateToken();
     const cancellationId = this.generateToken();
@@ -117,6 +118,7 @@ export class BookingService {
       confirmUrl,
       cancelUrl,
       bookingId,
+      lang: booking.lang ?? 'sr',
     });
 
     // TTL: expire at midnight the day after the booking date

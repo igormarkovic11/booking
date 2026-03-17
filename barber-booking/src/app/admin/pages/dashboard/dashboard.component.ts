@@ -253,7 +253,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (!this.bookingToDelete) return;
     this.showDeleteModal = false;
     try {
-      await this.adminService.deleteBookingAndNotify(this.bookingToDelete.id);
+      await this.adminService.deleteBookingAndNotify(this.bookingToDelete);
       this.showToast(
         this.translate.instant('ADMIN.APPOINTMENT_DELETED'),
         'success',
@@ -277,6 +277,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   async onQuickAddSaved(data: QuickBookingData): Promise<void> {
+    console.log('Quick add data:', data);
     this.showQuickAddModal = false;
     try {
       await this.adminService.addBooking({ ...data, date: this.selectedDay });
@@ -284,7 +285,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.translate.instant('ADMIN.APPOINTMENT_ADDED'),
         'success',
       );
-    } catch {
+    } catch (err) {
+      console.error('Quick add error:', err);
       this.showToast(this.translate.instant('ADMIN.ERROR_ADD'), 'error');
     }
     this.cdr.markForCheck();

@@ -1,14 +1,17 @@
 import {
+  ChangeDetectorRef,
   Component,
   EventEmitter,
+  inject,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface QuickBookingData {
   name: string;
@@ -77,7 +80,7 @@ export interface QuickBookingData {
             (click)="toggleService(s)"
             class="service-chip"
           >
-            {{ s }}
+            {{ getServiceLabel(s) }}
           </button>
         </div>
 
@@ -94,15 +97,22 @@ export interface QuickBookingData {
   `,
   styleUrl: './quick-add-modal.component.css',
 })
-export class QuickAddModalComponent implements OnChanges {
+export class QuickAddModalComponent implements OnChanges, OnInit {
   @Input() visible = false;
   @Input() availableTimes: string[] = [];
   @Output() saved = new EventEmitter<QuickBookingData>();
   @Output() cancelled = new EventEmitter<void>();
+  private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
-  allServices = ['Šišanje', 'Brijanje', 'Stilizovanje', 'Trimovanje'];
-
+  allServices = ['haircut', 'shave', 'styling', 'trim'];
+  serviceLabels: Record<string, string> = {};
   booking: QuickBookingData = this.emptyBooking();
+
+  ngOnInit(): void {
+    this.loadServiceLabels();
+    this.translate.onLangChange.subscribe(() => this.loadServiceLabels());
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     // Reset form every time the modal opens
@@ -130,5 +140,25 @@ export class QuickAddModalComponent implements OnChanges {
 
   private emptyBooking(): QuickBookingData {
     return { name: '', phone: '', email: '', time: '', services: [] };
+  }
+
+  private loadServiceLabels(): void {
+    const keys = this.allServices.map(
+      (s) => 'BOOKING.SERVICES.' + s.toUpperCase(),
+    );
+    this.translate.get(keys).subscribe((translations) => {
+      this.serviceLabels = this.allServices.reduce(
+        (acc, s) => {
+          acc[s] = translations['BOOKING.SERVICES.' + s.toUpperCase()];
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+      this.cdr.markForCheck();
+    });
+  }
+
+  getServiceLabel(value: string): string {
+    return this.serviceLabels[value] ?? value;
   }
 }

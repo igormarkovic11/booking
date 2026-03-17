@@ -349,11 +349,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   // Use value (e.g. 'sisanje') as the service identifier sent to Firestore
   getSelectedServices(): string[] {
-    return this.services
-      .filter((s) => s.selected)
-      .map((s) =>
-        this.translate.instant('BOOKING.SERVICES.' + s.value.toUpperCase()),
-      );
+    return this.services.filter((s) => s.selected).map((s) => s.value);
   }
 
   async onFormSubmitted(formData: BookingFormData): Promise<void> {
@@ -388,6 +384,7 @@ export class BookingComponent implements OnInit, OnDestroy {
           date: this.selectedDate,
           time: this.selectedTime!,
           services: this.getSelectedServices(),
+          lang: this.translate.currentLang ?? 'sr',
           ...formData,
         });
 

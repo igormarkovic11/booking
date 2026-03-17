@@ -43,7 +43,7 @@ export interface BookingFormData {
     <!-- PHONE -->
     <div class="field">
       <input
-        type="number"
+        type="text"
         [placeholder]="'FORM.PHONE' | translate"
         [(ngModel)]="data.phone"
         class="custom-input"
