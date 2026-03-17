@@ -27,6 +27,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class AppComponent implements OnInit {
   title = 'barber-booking';
   showFooter = true;
+  isLoading = true;
 
   constructor(
     private router: Router,
@@ -34,9 +35,11 @@ export class AppComponent implements OnInit {
     private bookingService: BookingService,
     private languageService: LanguageService,
   ) {
+    this.router.events;
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
+        this.isLoading = false;
         this.showFooter = !event.urlAfterRedirects.startsWith('/contact');
       });
   }
