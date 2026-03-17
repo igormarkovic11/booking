@@ -101,7 +101,7 @@
       [class.active]="langService.current === lang.code"
       (click)="switchLang(lang.code); closeMenu()"
     >
-      <span class="lang-flag">{{ lang.flag }}</span>
+      <span class="fi" [ngClass]="'fi-' + lang.flag"></span>
       <span class="lang-label">{{ lang.label }}</span>
     </button>
   </div>

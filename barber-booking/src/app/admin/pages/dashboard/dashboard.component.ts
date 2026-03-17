@@ -296,15 +296,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onCallCopied(phone: string): void {
-    navigator.clipboard
-      .writeText(phone)
-      .then(() =>
-        this.showToast(
-          this.translate.instant('ADMIN.NUMBER_COPIED'),
-          'success',
-        ),
-      )
-      .catch(() => {});
+    const el = document.createElement('textarea');
+    el.value = phone;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    this.showToast(
+      this.translate.instant('ADMIN.NUMBER_COPIED') + ': ' + phone,
+      'success',
+    );
+    this.cdr.markForCheck();
   }
 
   get filteredAvailableTimes(): string[] {
