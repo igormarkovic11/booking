@@ -4,11 +4,12 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './about.component.html',
   styleUrl: './about.component.css',

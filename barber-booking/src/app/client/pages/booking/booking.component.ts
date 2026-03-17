@@ -27,6 +27,7 @@ import {
   BookingFormData,
 } from './booking-form/booking-form.component';
 import { SuccessMessageComponent } from './success-message/success-message.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export const ALL_TIMES: string[] = [
   '09:00',
@@ -62,6 +63,7 @@ const MAX_SNAPSHOT_RETRIES = 5;
     ServiceSelectorComponent,
     BookingFormComponent,
     SuccessMessageComponent,
+    TranslateModule,
   ],
   templateUrl: './booking.component.html',
   styleUrls: ['./booking.component.scss'],
@@ -73,13 +75,15 @@ export class BookingComponent implements OnInit, OnDestroy {
   selectedDate = '';
   bookedTimes: string[] = [];
   selectedTime: string | null = null;
-  autoAdvanceMessage = ''; // shown when auto-advancing to next date
+  autoAdvanceMessage = '';
 
+  // value is used as translation key in the template
+  // label is kept empty — template uses 'BOOKING.SERVICES.' + value.toUpperCase() | translate
   services: Service[] = [
-    { label: 'Šišanje', value: 'sisanje', selected: false },
-    { label: 'Brijanje', value: 'brijanje', selected: false },
-    { label: 'Stilizovanje', value: 'stilizovanje', selected: false },
-    { label: 'Trimovanje', value: 'trimovanje', selected: false },
+    { label: '', value: 'sisanje', selected: false },
+    { label: '', value: 'brijanje', selected: false },
+    { label: '', value: 'stilizovanje', selected: false },
+    { label: '', value: 'trimovanje', selected: false },
   ];
 
   loading = false;
@@ -92,15 +96,13 @@ export class BookingComponent implements OnInit, OnDestroy {
   private snapshotRetryCount = 0;
   private midnightInterval: any;
   private lastCheckedDate = new Date().toDateString();
-
-  // Track which dates have been checked for auto-advance
-  // to avoid infinite loops if all dates are fully booked
   private autoAdvanceChecked = new Set<string>();
 
   constructor(
     private bookingService: BookingService,
     private firestore: Firestore,
     private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -113,6 +115,76 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     this.setupMidnightTimer();
     document.addEventListener('visibilitychange', this.onVisibilityChange);
+
+    this.translate
+      .get([
+        'BOOKING.SERVICES.HAIRCUT',
+        'BOOKING.SERVICES.SHAVE',
+        'BOOKING.SERVICES.STYLING',
+        'BOOKING.SERVICES.TRIM',
+      ])
+      .subscribe((t) => {
+        this.services = [
+          {
+            label: t['BOOKING.SERVICES.HAIRCUT'],
+            value: 'sisanje',
+            selected: false,
+          },
+          {
+            label: t['BOOKING.SERVICES.SHAVE'],
+            value: 'brijanje',
+            selected: false,
+          },
+          {
+            label: t['BOOKING.SERVICES.STYLING'],
+            value: 'stilizovanje',
+            selected: false,
+          },
+          {
+            label: t['BOOKING.SERVICES.TRIM'],
+            value: 'trimovanje',
+            selected: false,
+          },
+        ];
+        this.cdr.markForCheck();
+      });
+
+    // Re-translate when language switches
+    this.translate.onLangChange.subscribe(() => {
+      this.translate
+        .get([
+          'BOOKING.SERVICES.HAIRCUT',
+          'BOOKING.SERVICES.SHAVE',
+          'BOOKING.SERVICES.STYLING',
+          'BOOKING.SERVICES.TRIM',
+        ])
+        .subscribe((t) => {
+          const selected = this.services.map((s) => s.selected);
+          this.services = [
+            {
+              label: t['BOOKING.SERVICES.HAIRCUT'],
+              value: 'sisanje',
+              selected: selected[0] ?? false,
+            },
+            {
+              label: t['BOOKING.SERVICES.SHAVE'],
+              value: 'brijanje',
+              selected: selected[1] ?? false,
+            },
+            {
+              label: t['BOOKING.SERVICES.STYLING'],
+              value: 'stilizovanje',
+              selected: selected[2] ?? false,
+            },
+            {
+              label: t['BOOKING.SERVICES.TRIM'],
+              value: 'trimovanje',
+              selected: selected[3] ?? false,
+            },
+          ];
+          this.cdr.markForCheck();
+        });
+    });
   }
 
   ngOnDestroy(): void {
@@ -176,42 +248,36 @@ export class BookingComponent implements OnInit, OnDestroy {
     );
   }
 
-  /* ---------- AUTO-ADVANCE LOGIC ---------- */
+  /* ---------- AUTO-ADVANCE ---------- */
   private checkAndAutoAdvance(): void {
-    // Don't auto-advance if the user manually selected this date
     if (this.autoAdvanceChecked.has(this.selectedDate)) return;
     this.autoAdvanceChecked.add(this.selectedDate);
 
     const available = this.getAvailableTimesForDate(this.selectedDate);
     if (available.length > 0) {
-      // Current date has free slots — no need to advance
       this.autoAdvanceMessage = '';
       return;
     }
 
-    // Find next date in the list that we haven't checked yet
     const currentIndex = this.availableDates.indexOf(this.selectedDate);
     const nextDate = this.availableDates[currentIndex + 1];
 
     if (nextDate) {
-      this.autoAdvanceMessage = `Nema slobodnih termina, prebačeni ste na sljedeći dostupni datum.`;
+      this.autoAdvanceMessage = this.translate.instant('BOOKING.AUTO_ADVANCE');
       this.selectedDate = nextDate;
       this.selectedTime = null;
       this.subscribeToBookedTimes();
     } else {
-      // All 3 dates are fully booked
-      this.autoAdvanceMessage = `Svi termini u narednim danima su zauzeti. Molimo pokušajte kasnije.`;
+      this.autoAdvanceMessage = this.translate.instant('BOOKING.ALL_TAKEN');
     }
   }
 
-  // Returns times that are available (not booked and not in the past)
   private getAvailableTimesForDate(date: string): string[] {
     const times = this.getFilteredTimesForDate(date);
     const booked = new Set(this.bookedTimes);
     return times.filter((t) => !booked.has(t));
   }
 
-  // Filters out past times for today, returns all times for future dates
   private getFilteredTimesForDate(date: string): string[] {
     const now = new Date();
     const todayStr = now.toLocaleDateString('sv-SE');
@@ -233,7 +299,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.subscribeToBookedTimes();
   }
 
-  /* ---------- VISIBILITY ---------- */
   private onVisibilityChange = async (): Promise<void> => {
     if (document.visibilityState !== 'visible') return;
     this.snapshotRetryCount = 0;
@@ -243,7 +308,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   };
 
-  /* ---------- DATUMI ---------- */
   async generateDates(): Promise<void> {
     try {
       const bannedDates = await this.bookingService.getDayOffs();
@@ -267,7 +331,6 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   async onDateChanged(date: string): Promise<void> {
-    // User manually changed date — clear auto-advance message and reset checked set
     this.selectedDate = date;
     this.selectedTime = null;
     this.snapshotRetryCount = 0;
@@ -276,26 +339,28 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.subscribeToBookedTimes();
   }
 
-  /* ---------- TERMINI ---------- */
   get filteredTimes(): string[] {
     return this.getFilteredTimesForDate(this.selectedDate);
   }
 
-  /* ---------- USLUGE ---------- */
   onServiceToggled(service: Service): void {
     service.selected = !service.selected;
   }
 
+  // Use value (e.g. 'sisanje') as the service identifier sent to Firestore
   getSelectedServices(): string[] {
-    return this.services.filter((s) => s.selected).map((s) => s.label);
+    return this.services
+      .filter((s) => s.selected)
+      .map((s) =>
+        this.translate.instant('BOOKING.SERVICES.' + s.value.toUpperCase()),
+      );
   }
 
-  /* ---------- SUBMIT ---------- */
   async onFormSubmitted(formData: BookingFormData): Promise<void> {
     this.errorMessage = '';
 
     if (!this.selectedDate || !this.selectedTime) {
-      this.errorMessage = 'Odaberi datum i termin';
+      this.errorMessage = this.translate.instant('BOOKING.ERROR_DATE_TIME');
       return;
     }
 
@@ -313,7 +378,9 @@ export class BookingComponent implements OnInit, OnDestroy {
         );
 
         if (!isAvailable) {
-          this.errorMessage = 'Termin je upravo zauzet 😕';
+          this.errorMessage = this.translate.instant(
+            'BOOKING.ERROR_SLOT_TAKEN',
+          );
           break;
         }
 
@@ -324,15 +391,17 @@ export class BookingComponent implements OnInit, OnDestroy {
           ...formData,
         });
 
-        this.successMessage = `Poslali smo ti link za potvrdu na ${formData.email}. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.`;
+        this.successMessage = this.translate.instant('BOOKING.SUCCESS', {
+          email: formData.email,
+        });
         this.resetForm();
         break;
       } catch (error: any) {
         attempt++;
         if (attempt > MAX_RETRIES) {
           this.errorMessage = !navigator.onLine
-            ? 'Nema internet konekcije. Provjeri mrežu i pokušaj ponovo.'
-            : 'Došlo je do greške. Pokušajte ponovo.';
+            ? this.translate.instant('BOOKING.ERROR_NO_INTERNET')
+            : this.translate.instant('BOOKING.ERROR_GENERIC');
         } else {
           await new Promise((res) => setTimeout(res, 1000));
         }

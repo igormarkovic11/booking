@@ -6,11 +6,12 @@ import {
   Renderer2,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [],
+  imports: [TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.css',

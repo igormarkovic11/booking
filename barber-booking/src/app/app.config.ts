@@ -1,7 +1,8 @@
 import {
   ApplicationConfig,
   LOCALE_ID,
-  provideZoneChangeDetection, isDevMode,
+  provideZoneChangeDetection,
+  importProvidersFrom,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -18,9 +19,21 @@ import { environment } from './environments/environment';
 import { registerLocaleData } from '@angular/common';
 import localeSr from '@angular/common/locales/sr-Latn';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { provideServiceWorker } from '@angular/service-worker';
+import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
+import { Observable, of } from 'rxjs';
+
+import * as en from '../../public/i18n/en.json';
+import * as sr from '../../public/i18n/sr.json';
 
 registerLocaleData(localeSr);
+
+const translations: Record<string, any> = { en, sr };
+
+class StaticTranslateLoader implements TranslateLoader {
+  getTranslation(lang: string): Observable<any> {
+    return of(translations[lang] ?? translations['sr']);
+  }
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -28,10 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
 
-    // 1. Firebase app MUST come first
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-
-    // 2. Auth and Firestore AFTER the app is initialized
     provideAuth(() => getAuth()),
     provideFirestore(() =>
       initializeFirestore(getApp(), {
@@ -41,10 +51,17 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
 
+    importProvidersFrom(
+      TranslateModule.forRoot({
+        defaultLanguage: 'sr',
+        loader: {
+          provide: TranslateLoader,
+          useClass: StaticTranslateLoader,
+        },
+      }),
+    ),
+
     provideAnimationsAsync(),
-    { provide: LOCALE_ID, useValue: 'sr-Latn' }, provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }),
+    { provide: LOCALE_ID, useValue: 'sr-Latn' },
   ],
 };

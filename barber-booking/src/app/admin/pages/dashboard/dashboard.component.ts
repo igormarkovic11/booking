@@ -32,6 +32,7 @@ import { AdminService } from '../../../core/services/admin.service';
 import { BookingService } from '../../../core/services/booking.service';
 import { ALL_TIMES } from '../../../client/pages/booking/booking.component';
 import { BookingNotificationComponent } from '../../../shared/booking-notification/booking-notification.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -45,6 +46,7 @@ import { BookingNotificationComponent } from '../../../shared/booking-notificati
     DeleteModalComponent,
     QuickAddModalComponent,
     BookingNotificationComponent,
+    TranslateModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -82,6 +84,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private bookingService: BookingService,
     private firestore: Firestore,
     private cdr: ChangeDetectorRef,
+    private translate: TranslateService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -233,9 +236,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       } else {
         this.dayOffs = this.dayOffs.filter((d) => d !== this.selectedDay);
       }
-      this.showToast('Dan je ažuriran', 'success');
+      this.showToast(this.translate.instant('ADMIN.DAY_UPDATED'), 'success');
     } catch {
-      this.showToast('Greška pri ažuriranju dana', 'error');
+      this.showToast(this.translate.instant('ADMIN.ERROR_DAY'), 'error');
     }
     this.cdr.markForCheck();
   }
@@ -251,9 +254,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showDeleteModal = false;
     try {
       await this.adminService.deleteBookingAndNotify(this.bookingToDelete.id);
-      this.showToast('Termin je obrisan', 'success');
+      this.showToast(
+        this.translate.instant('ADMIN.APPOINTMENT_DELETED'),
+        'success',
+      );
     } catch {
-      this.showToast('Greška pri brisanju termina', 'error');
+      this.showToast(this.translate.instant('ADMIN.ERROR_DELETE'), 'error');
     }
     this.bookingToDelete = null;
     this.cdr.markForCheck();
@@ -274,9 +280,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.showQuickAddModal = false;
     try {
       await this.adminService.addBooking({ ...data, date: this.selectedDay });
-      this.showToast('Termin je dodan', 'success');
+      this.showToast(
+        this.translate.instant('ADMIN.APPOINTMENT_ADDED'),
+        'success',
+      );
     } catch {
-      this.showToast('Greška pri dodavanju termina', 'error');
+      this.showToast(this.translate.instant('ADMIN.ERROR_ADD'), 'error');
     }
     this.cdr.markForCheck();
   }
@@ -289,7 +298,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   onCallCopied(phone: string): void {
     navigator.clipboard
       .writeText(phone)
-      .then(() => this.showToast('Broj kopiran', 'success'))
+      .then(() =>
+        this.showToast(
+          this.translate.instant('ADMIN.NUMBER_COPIED'),
+          'success',
+        ),
+      )
       .catch(() => {});
   }
 

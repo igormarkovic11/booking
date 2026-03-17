@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface QuickBookingData {
   name: string;
@@ -20,21 +21,23 @@ export interface QuickBookingData {
 @Component({
   selector: 'app-quick-add-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   template: `
     <div class="modal-overlay" *ngIf="visible">
       <div class="modal-content quick-add-modal">
-        <h3>Novo zakazivanje</h3>
+        <h3>{{ 'QUICK_ADD_MODAL.TITLE' | translate }}</h3>
 
-        <label class="input-label">Ime klijenta</label>
+        <label class="input-label">{{
+          'QUICK_ADD.CLIENT_NAME' | translate
+        }}</label>
         <input
           type="text"
           [(ngModel)]="booking.name"
           class="admin-input-field"
-          placeholder="Unesite ime..."
+          [placeholder]="'QUICK_ADD.NAME_PLACEHOLDER' | translate"
         />
 
-        <label class="input-label">Telefon (opciono)</label>
+        <label class="input-label">{{ 'QUICK_ADD.PHONE' | translate }}</label>
         <input
           type="tel"
           [(ngModel)]="booking.phone"
@@ -42,7 +45,7 @@ export interface QuickBookingData {
           placeholder="06x..."
         />
 
-        <label class="input-label">Email (za obaveštenja)</label>
+        <label class="input-label">{{ 'QUICK_ADD.EMAIL' | translate }}</label>
         <input
           type="email"
           [(ngModel)]="booking.email"
@@ -50,7 +53,9 @@ export interface QuickBookingData {
           placeholder="klijent@mail.com"
         />
 
-        <label class="input-label">Izaberi vreme</label>
+        <label class="input-label">{{
+          'QUICK_ADD.SELECT_TIME' | translate
+        }}</label>
         <div class="time-grid">
           <button
             *ngFor="let t of availableTimes"
@@ -62,7 +67,9 @@ export interface QuickBookingData {
           </button>
         </div>
 
-        <label class="input-label">Usluge</label>
+        <label class="input-label">{{
+          'QUICK_ADD.SERVICES' | translate
+        }}</label>
         <div class="service-chips">
           <button
             *ngFor="let s of allServices"
@@ -76,9 +83,11 @@ export interface QuickBookingData {
 
         <div class="modal-actions">
           <button class="action-btn cancel" (click)="onCancel()">
-            Odustani
+            {{ 'QUICK_ADD_MODAL.CANCEL' | translate }}
           </button>
-          <button class="add-btn" (click)="onSave()">Kreiraj termin</button>
+          <button class="add-btn" (click)="onSave()">
+            {{ 'QUICK_ADD_MODAL.CONFIRM' | translate }}
+          </button>
         </div>
       </div>
     </div>

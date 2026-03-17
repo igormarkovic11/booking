@@ -5,6 +5,7 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface BookingNotification {
   id: string;
@@ -16,7 +17,7 @@ export interface BookingNotification {
 @Component({
   selector: 'app-booking-notification',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="notifications-container">
@@ -27,7 +28,7 @@ export interface BookingNotification {
       >
         <div class="notif-header">
           <span class="notif-icon">✂️</span>
-          <span class="notif-title">Nova rezervacija!</span>
+          <span class="notif-title">{{ 'NOTIFICATION.NEW' | translate }}</span>
           <button class="notif-close" (click)="dismiss(n.id)">✕</button>
         </div>
         <div class="notif-body">

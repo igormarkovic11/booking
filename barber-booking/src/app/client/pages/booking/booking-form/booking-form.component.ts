@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  inject,
   Input,
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface BookingFormData {
   name: string;
@@ -18,13 +20,13 @@ export interface BookingFormData {
   selector: 'app-booking-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   template: `
     <!-- NAME -->
     <div class="field">
       <input
         type="text"
-        placeholder="Ime"
+        [placeholder]="'FORM.NAME' | translate"
         [(ngModel)]="data.name"
         class="custom-input"
         [class.invalid]="touched.name && errors.name"
@@ -41,8 +43,8 @@ export interface BookingFormData {
     <!-- PHONE -->
     <div class="field">
       <input
-        type="text"
-        placeholder="Telefon"
+        type="number"
+        [placeholder]="'FORM.PHONE' | translate"
         [(ngModel)]="data.phone"
         class="custom-input"
         [class.invalid]="touched.phone && errors.phone"
@@ -60,7 +62,7 @@ export interface BookingFormData {
     <div class="field">
       <input
         type="email"
-        placeholder="Email"
+        [placeholder]="'FORM.EMAIL' | translate"
         [(ngModel)]="data.email"
         class="custom-input"
         [class.invalid]="touched.email && errors.email"
@@ -81,8 +83,8 @@ export interface BookingFormData {
       (click)="onSubmit()"
       [disabled]="loading || !canSubmit"
     >
-      <span *ngIf="!loading">Završi</span>
-      <span *ngIf="loading">Slanje...</span>
+      <span *ngIf="!loading">{{ 'BOOKING.SUBMIT' | translate }}</span>
+      <span *ngIf="loading">{{ 'BOOKING.SUBMITTING' | translate }}</span>
     </button>
   `,
   styleUrl: './booking-form.component.css',
@@ -92,6 +94,7 @@ export class BookingFormComponent {
   @Input() errorMessage = '';
   @Input() canSubmit = false;
   @Output() submitted = new EventEmitter<BookingFormData>();
+  private translate = inject(TranslateService);
 
   data: BookingFormData = { name: '', phone: '', email: '' };
 
@@ -125,33 +128,32 @@ export class BookingFormComponent {
     switch (field) {
       case 'name':
         this.errors.name = !this.data.name.trim()
-          ? 'Ime je obavezno'
+          ? this.translate.instant('FORM.NAME_REQUIRED')
           : this.data.name.trim().length < 2
-            ? 'Ime mora imati najmanje 2 karaktera'
+            ? this.translate.instant('FORM.NAME_MIN')
             : '';
         break;
 
       case 'phone':
         const phoneRegex = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s./0-9]*$/;
         this.errors.phone = !this.data.phone.trim()
-          ? 'Telefon je obavezan'
+          ? this.translate.instant('FORM.PHONE_REQUIRED')
           : this.data.phone.trim().length < 9
-            ? 'Telefon mora imati najmanje 9 cifara'
+            ? this.translate.instant('FORM.PHONE_MIN')
             : !phoneRegex.test(this.data.phone)
-              ? 'Unesite ispravan broj telefona'
+              ? this.translate.instant('FORM.PHONE_INVALID')
               : '';
         break;
 
       case 'email':
         this.errors.email = !this.data.email.trim()
-          ? 'Email je obavezan'
+          ? this.translate.instant('FORM.EMAIL_REQUIRED')
           : !/\S+@\S+\.\S+/.test(this.data.email)
-            ? 'Unesite validan email'
+            ? this.translate.instant('FORM.EMAIL_INVALID')
             : '';
         break;
     }
   }
-
   private validateAll(): boolean {
     (['name', 'phone', 'email'] as const).forEach((f) => {
       this.touched[f] = true;

@@ -5,11 +5,12 @@ import { BookingService } from '../../../core/services/booking.service';
 import { Auth, signInAnonymously, authState } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-confirm',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './confirm.component.html',
   styleUrls: ['./confirm.component.scss'],
 })

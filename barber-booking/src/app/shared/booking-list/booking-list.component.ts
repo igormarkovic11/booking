@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface Booking {
   id: string;
@@ -20,14 +21,16 @@ export interface Booking {
 @Component({
   selector: 'app-booking-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bookings-list">
-      <div *ngIf="loading" class="loader">Učitavanje...</div>
+      <div *ngIf="loading" class="loader">
+        {{ 'ADMIN.LOADING' | translate }}
+      </div>
 
       <div class="no-data" *ngIf="!loading && bookings.length === 0">
-        Nema rezervacija za ovaj dan.
+        {{ 'ADMIN.NO_BOOKINGS' | translate }}
       </div>
 
       <div class="booking-row" *ngFor="let b of bookings; trackBy: trackById">
@@ -41,7 +44,7 @@ export interface Booking {
             [href]="'tel:' + b.phone"
             class="action-btn call"
             (click)="onCall(b.phone)"
-            title="Pozovi i kopiraj broj"
+            [title]="'ADMIN.NUMBER_COPIED' | translate"
             >📞</a
           >
           <button (click)="delete.emit(b)" class="action-btn delete">🗑️</button>

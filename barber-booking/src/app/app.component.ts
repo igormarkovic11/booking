@@ -7,6 +7,8 @@ import { CommonModule } from '@angular/common';
 import { OfflineBannerComponent } from './shared/offline-banner/offline-banner.component';
 import { Auth, signInAnonymously } from '@angular/fire/auth';
 import { BookingService } from './core/services/booking.service';
+import { LanguageService } from './core/services/language.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +19,7 @@ import { BookingService } from './core/services/booking.service';
     FooterComponent,
     CommonModule,
     OfflineBannerComponent,
+    TranslateModule,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
@@ -29,6 +32,7 @@ export class AppComponent implements OnInit {
     private router: Router,
     private auth: Auth,
     private bookingService: BookingService,
+    private languageService: LanguageService,
   ) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -38,8 +42,10 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Preload anonymous auth and day-offs as soon as the app boots
-    // so by the time the user navigates to /booking everything is ready
+    // Init language first so translations are ready before anything renders
+    this.languageService.init();
+
+    // Preload auth and dayoffs
     signInAnonymously(this.auth).catch(() => {});
     this.bookingService.getDayOffs().catch(() => {});
   }

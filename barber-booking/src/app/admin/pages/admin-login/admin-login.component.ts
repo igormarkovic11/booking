@@ -3,24 +3,25 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-admin-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="login-page">
       <div class="login-card">
-        <h2>Admin pristup</h2>
-        <p class="subtitle">Unesite PIN za nastavak</p>
+        <h2>{{ 'ADMIN.LOGIN_TITLE' | translate }}</h2>
+        <p class="subtitle">{{ 'ADMIN.LOGIN_SUBTITLE' | translate }}</p>
 
         <input
           type="password"
           [(ngModel)]="pin"
           class="pin-input"
           maxlength="4"
-          placeholder="••••"
+          [placeholder]="'ADMIN.PIN_PLACEHOLDER' | translate"
           [disabled]="loading"
           (keyup.enter)="submit()"
           autofocus
@@ -33,8 +34,8 @@ import { AuthService } from '../../../core/services/auth.service';
           (click)="submit()"
           [disabled]="loading || pin.length === 0"
         >
-          <span *ngIf="!loading">Potvrdi</span>
-          <span *ngIf="loading">Provjera...</span>
+          <span *ngIf="!loading">{{ 'ADMIN.CONFIRM_BTN' | translate }}</span>
+          <span *ngIf="loading">{{ 'ADMIN.CONFIRMING' | translate }}</span>
         </button>
       </div>
     </div>
