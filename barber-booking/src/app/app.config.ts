@@ -18,6 +18,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { environment } from './environments/environment';
 import { registerLocaleData } from '@angular/common';
 import localeSr from '@angular/common/locales/sr-Latn';
+import localeEn from '@angular/common/locales/en';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
@@ -26,6 +27,7 @@ import * as en from '../../public/i18n/en.json';
 import * as sr from '../../public/i18n/sr.json';
 
 registerLocaleData(localeSr);
+registerLocaleData(localeEn);
 
 const translations: Record<string, any> = { en, sr };
 

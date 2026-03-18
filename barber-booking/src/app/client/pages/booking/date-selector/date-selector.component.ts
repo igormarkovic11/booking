@@ -2,12 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  inject,
   Input,
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-date-selector',
@@ -27,7 +28,11 @@ import { TranslateModule } from '@ngx-translate/core';
           {{ 'BOOKING.TODAY' | translate }}, {{ date | date: 'dd.MM.yyyy.' }}
         </ng-container>
         <ng-container *ngIf="date !== todayStr">
-          {{ date | date: 'EEEE, dd.MM.yyyy.' | titlecase }}
+          {{
+            date
+              | date: 'EEEE, dd.MM.yyyy.' : undefined : currentLang
+              | titlecase
+          }}
         </ng-container>
       </option>
     </select>
@@ -39,8 +44,13 @@ export class DateSelectorComponent {
   @Input() selectedDate = '';
   @Input() disabled = false;
   @Output() dateChange = new EventEmitter<string>();
+  private translate = inject(TranslateService);
 
   get todayStr(): string {
     return new Date().toLocaleDateString('sv-SE');
+  }
+
+  get currentLang(): string {
+    return this.translate.currentLang ?? 'sr';
   }
 }
