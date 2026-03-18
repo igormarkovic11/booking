@@ -51,6 +51,7 @@ export class DateSelectorComponent {
   }
 
   get currentLang(): string {
-    return this.translate.currentLang ?? 'sr';
+    const lang = this.translate.currentLang ?? 'sr';
+    return lang === 'sr' ? 'sr-Latn' : 'en';
   }
 }
