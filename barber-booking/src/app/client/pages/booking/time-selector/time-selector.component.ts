@@ -6,14 +6,15 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-time-selector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <p class="step-instruction">Odaberite termin</p>
+    <p class="step-instruction">{{ 'BOOKING.SELECT_TIME' | translate }}</p>
     <div class="time-grid">
       <button
         *ngFor="let time of times; trackBy: trackByTime"

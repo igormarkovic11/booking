@@ -1,0 +1,162 @@
+{
+  "NAV": {
+    "ABOUT": "About",
+    "CONTACT": "Contact",
+    "SERVICES": "Services",
+    "BOOK": "Book Appointment"
+  },
+  "HOME": {
+    "SUBTITLE": "Book your appointment quickly and easily",
+    "CTA": "Book Appointment"
+  },
+  "BOOKING": {
+    "TITLE": "Book Appointment",
+    "TODAY": "Today",
+    "SELECT_DATE": "Select a date",
+    "SELECT_TIME": "Select a time",
+    "SERVICES_TITLE": "Which services do you want?",
+    "SERVICES_OPTIONAL": "(optional)",
+    "SUBMIT": "Finish",
+    "SUBMITTING": "Sending...",
+    "SUCCESS": "We sent you a confirmation link to {{email}}. Please click the link within 15 minutes to secure your appointment.",
+    "ERROR_DATE_TIME": "Select a date and time",
+    "ERROR_NAME_PHONE": "Enter your name and phone number",
+    "ERROR_EMAIL": "Enter a valid email",
+    "ERROR_PHONE": "Enter a valid phone number (min. 9 digits)",
+    "ERROR_SLOT_TAKEN": "This slot was just taken 😕",
+    "ERROR_NO_INTERNET": "No internet connection. Check your network and try again.",
+    "ERROR_GENERIC": "An error occurred. Please try again.",
+    "SNAPSHOT_ERROR": "Unable to load time availability.",
+    "RETRY": "Try again",
+    "AUTO_ADVANCE": "All slots are taken, you have been moved to the next available date.",
+    "ALL_TAKEN": "All slots in the coming days are taken. Please try again later.",
+    "SERVICES": {
+      "HAIRCUT": "Haircut",
+      "SHAVE": "Shave",
+      "STYLING": "Styling",
+      "TRIM": "Trim"
+    }
+  },
+  "FORM": {
+    "NAME": "Name",
+    "PHONE": "Phone",
+    "EMAIL": "Email",
+    "NAME_REQUIRED": "Name is required",
+    "NAME_MIN": "Name must be at least 2 characters",
+    "PHONE_REQUIRED": "Phone is required",
+    "PHONE_MIN": "Phone must be at least 9 digits",
+    "PHONE_INVALID": "Enter a valid phone number",
+    "EMAIL_REQUIRED": "Email is required",
+    "EMAIL_INVALID": "Enter a valid email"
+  },
+  "CONFIRM": {
+    "LOADING": "Verifying confirmation...",
+    "SUCCESS": "Your appointment has been confirmed! See you soon. ✂️",
+    "EXPIRED": "This confirmation link has expired. Please book again.",
+    "ALREADY": "This appointment is already confirmed.",
+    "NOT_FOUND": "Appointment not found.",
+    "INVALID": "Invalid confirmation link.",
+    "SLOT_TAKEN": "This slot was taken by someone else. Please book again.",
+    "HOME": "Back to Home"
+  },
+  "CANCEL": {
+    "LOADING": "Cancelling appointment...",
+    "SUCCESS": "Your appointment has been successfully cancelled.",
+    "ERROR": "Unable to cancel. The link may be invalid or already used.",
+    "HOME": "Back to Home"
+  },
+  "ADMIN": {
+    "LOGIN_TITLE": "Admin Access",
+    "LOGIN_SUBTITLE": "Enter PIN to continue",
+    "PIN_PLACEHOLDER": "••••",
+    "CONFIRM_BTN": "Confirm",
+    "CONFIRMING": "Checking...",
+    "WRONG_PIN": "Wrong PIN. Please try again.",
+    "DASHBOARD_TITLE": "Appointments",
+    "DAY_OFF_OPEN": "🔓 Open Day",
+    "DAY_OFF_CLOSE": "🚫 Close Day",
+    "NEW_APPOINTMENT": "New Appointment",
+    "LOGOUT": "Log out",
+    "DAY_OFF_BANNER": "⚠️ THIS DAY IS MARKED AS CLOSED",
+    "NO_BOOKINGS": "No appointments for this day.",
+    "LOADING": "Loading...",
+    "DAY_UPDATED": "Day updated",
+    "APPOINTMENT_DELETED": "Appointment deleted",
+    "APPOINTMENT_ADDED": "Appointment added",
+    "ERROR_DELETE": "Error deleting appointment",
+    "ERROR_ADD": "Error adding appointment",
+    "ERROR_DAY": "Error updating day",
+    "NUMBER_COPIED": "Number copied",
+    "LOAD_ERROR": "Unable to load data.",
+    "RETRY": "🔄 Try again"
+  },
+  "ABOUT": {
+    "TITLE": "About Us",
+    "SUBTITLE": "More than a haircut — a place where style has character.",
+    "STORY_TITLE": "Our Story",
+    "STORY_TEXT": "Hairstyle Vidaković is a place where tradition meets modern style. We have been building trust through quality, precision and good conversation for years.",
+    "WHY_TITLE": "Why choose us?",
+    "WHY_1": "✂️ Experienced and dedicated barbers",
+    "WHY_2": "🕒 We respect your time",
+    "WHY_3": "💈 Pleasant and professional atmosphere"
+  },
+  "CONTACT": {
+    "TITLE": "Contact",
+    "PHONE": "📞 +381 21 123 456",
+    "EMAIL": "✉️ info@hairstylevidakovic.rs",
+    "ADDRESS": "📍 Novi Sad",
+    "HOURS_TITLE": "Working Hours",
+    "MON_FRI": "Mon – Fri: 09:00 – 18:00",
+    "SAT": "Saturday: 09:00 – 15:00",
+    "SUN": "Sunday: Closed",
+    "MAP_LOADING": "Map loading..."
+  },
+  "SERVICES_PAGE": {
+    "TITLE": "Our Services",
+    "SUBTITLE": "Professional care, modern style and attention to detail.",
+    "HAIRCUT": "Haircut",
+    "HAIRCUT_DESC": "Precise haircut tailored to your style and face shape.",
+    "SHAVE": "Shave",
+    "SHAVE_DESC": "Classic or modern shave with maximum comfort.",
+    "STYLING": "Styling",
+    "STYLING_DESC": "Finishing touches and hairstyle shaping to your liking.",
+    "TRIM": "Trim",
+    "TRIM_DESC": "Beard and contour grooming for a clean and tidy look."
+  },
+  "FOOTER": {
+    "CONTACT_TITLE": "Contact",
+    "HOURS_TITLE": "Working Hours",
+    "LOCATION_TITLE": "Location",
+    "MON_FRI": "Tue – Sat: 09:00 – 18:00",
+    "SUN_MON": "Sun – Mon: Closed",
+    "COPYRIGHT": "© 2026 Hairstyle Vidaković"
+  },
+  "OFFLINE": "No internet connection — changes will not be saved",
+  "DELETE_MODAL": {
+    "TITLE": "Delete Appointment",
+    "MESSAGE": "Are you sure you want to delete this appointment?",
+    "CONFIRM": "Delete",
+    "CANCEL": "Cancel"
+  },
+  "QUICK_ADD_MODAL": {
+    "TITLE": "New Appointment",
+    "CONFIRM": "Save",
+    "CANCEL": "Cancel"
+  },
+  "PIN_MODAL": {
+    "TITLE": "Enter PIN",
+    "CONFIRM": "Confirm",
+    "CANCEL": "Cancel"
+  },
+  "NOTIFICATION": {
+    "NEW": "New Booking!"
+  },
+  "QUICK_ADD": {
+    "CLIENT_NAME": "Client Name",
+    "NAME_PLACEHOLDER": "Enter name...",
+    "PHONE": "Phone (optional)",
+    "EMAIL": "Email (for notifications)",
+    "SELECT_TIME": "Select Time",
+    "SERVICES": "Services"
+  }
+}

@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface Service {
   label: string;
@@ -16,11 +17,14 @@ export interface Service {
 @Component({
   selector: 'app-service-selector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="services-box" [style.opacity]="disabled ? '0.5' : '1'">
-      <p class="services-title">Koje usluge želiš? <span>(opciono)</span></p>
+      <p class="services-title">
+        {{ 'BOOKING.SERVICES_TITLE' | translate }}
+        <span>{{ 'BOOKING.SERVICES_OPTIONAL' | translate }}</span>
+      </p>
       <div class="checkboxes">
         <label *ngFor="let service of services; trackBy: trackByValue">
           <input

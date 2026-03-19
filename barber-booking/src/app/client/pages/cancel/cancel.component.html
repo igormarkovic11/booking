@@ -2,29 +2,22 @@
   <div class="cancel-card">
     <div *ngIf="status === 'loading'" class="status-box">
       <div class="spinner"></div>
-      <h2>Otkazivanje u toku...</h2>
-      <p>Molimo sačekajte dok obradimo vaš zahtev.</p>
+      <h2>{{ "CANCEL.LOADING" | translate }}</h2>
     </div>
 
     <div *ngIf="status === 'success'" class="status-box">
       <div class="icon success">✅</div>
-      <h2>Termin je otkazan</h2>
-      <p>
-        Uspešno ste otkazali svoj termin. Hvala što ste nas obavestili na vreme.
-      </p>
+      <h2>{{ "CANCEL.SUCCESS" | translate }}</h2>
       <button class="home-btn" (click)="navigateToHome()">
-        Vrati se na početnu
+        {{ "CANCEL.HOME" | translate }}
       </button>
     </div>
 
     <div *ngIf="status === 'error'" class="status-box">
       <div class="icon error">❌</div>
-      <h2>Greška pri otkazivanju</h2>
-      <p>
-        Link nije validan, termin je već otkazan ili više ne postoji u sistemu.
-      </p>
+      <h2>{{ "CANCEL.ERROR" | translate }}</h2>
       <button class="home-btn" (click)="navigateToHome()">
-        Vrati se na početnu
+        {{ "CANCEL.HOME" | translate }}
       </button>
     </div>
   </div>

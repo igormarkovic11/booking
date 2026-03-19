@@ -5,11 +5,12 @@ import { BookingService } from '../../../core/services/booking.service';
 import { Auth, signInAnonymously, authState } from '@angular/fire/auth';
 import { firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-cancel',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   templateUrl: './cancel.component.html',
   styleUrl: './cancel.component.css',
 })

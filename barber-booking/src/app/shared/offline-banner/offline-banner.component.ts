@@ -6,15 +6,16 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-offline-banner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="offline-banner" *ngIf="isOffline">
-      <span>⚡ Nema internet konekcije — promjene se neće sačuvati</span>
+      <span>⚡ {{ 'OFFLINE' | translate }}</span>
     </div>
   `,
   styles: [

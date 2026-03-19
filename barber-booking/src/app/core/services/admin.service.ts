@@ -50,34 +50,44 @@ export class AdminService {
   async addBooking(bookingData: any) {
     return addDoc(this.bookingsRef, {
       ...bookingData,
+      status: 'confirmed',
       createdAt: new Date(),
     });
   }
 
   /* ---------- OBRIŠI I OBAVIJESTI ---------- */
   async deleteBookingAndNotify(booking: any): Promise<void> {
+    console.log('Deleting booking:', booking.id);
     await deleteDoc(doc(this.firestore, `bookings/${booking.id}`));
 
-    if (!booking.email?.trim()) return;
+    console.log('Booking email:', booking.email);
+    if (!booking.email?.trim()) {
+      console.log('No email, skipping notification');
+      return;
+    }
 
     const formattedDate = booking.date.split('-').reverse().join('.');
-    const { subject, html } = this.emailTemplate.getCancellationEmail({
+    const emailContent = this.emailTemplate.getCancellationEmail({
       name: booking.name,
       formattedDate,
       time: booking.time,
       services: booking.services,
+      lang: booking.lang ?? 'sr',
     });
 
+    console.log('Email content:', emailContent);
+
     try {
-      await addDoc(this.bookingsRef, {
+      const ref = await addDoc(this.bookingsRef, {
         to: [booking.email],
-        message: { subject, html },
+        message: { subject: emailContent.subject, html: emailContent.html },
         status: 'cancelled',
         type: 'email_trigger',
         createdAt: new Date(),
       });
+      console.log('Email trigger doc created:', ref.id);
     } catch (error) {
-      console.error('Email trigger neuspješan:', error);
+      console.error('Email trigger failed:', error);
     }
   }
 

@@ -2,21 +2,25 @@
   <div class="admin-card">
     <div class="admin-header">
       <div class="top-row">
-        <h2>Pregled termina</h2>
+        <h2>{{ "ADMIN.DASHBOARD_TITLE" | translate }}</h2>
         <div class="header-actions">
           <button
             class="dayoff-btn"
             [class.active]="isCurrentDayOff"
             (click)="toggleDayOff()"
           >
-            {{ isCurrentDayOff ? "🔓 Otvori dan" : "🚫 Zatvori dan" }}
+            {{
+              isCurrentDayOff
+                ? ("ADMIN.DAY_OFF_OPEN" | translate)
+                : ("ADMIN.DAY_OFF_CLOSE" | translate)
+            }}
           </button>
           <button
             class="add-btn"
             (click)="quickAdd()"
             [disabled]="isCurrentDayOff"
           >
-            Novi termin
+            {{ "ADMIN.NEW_APPOINTMENT" | translate }}
           </button>
         </div>
       </div>
@@ -31,12 +35,14 @@
     </div>
 
     <div class="day-off-banner" *ngIf="isCurrentDayOff">
-      ⚠️ DAN JE OZNAČEN KAO NERADNI
+      {{ "ADMIN.DAY_OFF_BANNER" | translate }}
     </div>
 
     <div class="load-error" *ngIf="loadError; else bookingListTpl">
-      <span>⚠️ Nije moguće učitati podatke.</span>
-      <button class="retry-btn" (click)="retryLoad()">🔄 Pokušaj ponovo</button>
+      <span>⚠️ {{ "ADMIN.LOAD_ERROR" | translate }}</span>
+      <button class="retry-btn" (click)="retryLoad()">
+        {{ "ADMIN.RETRY" | translate }}
+      </button>
     </div>
 
     <ng-template #bookingListTpl>

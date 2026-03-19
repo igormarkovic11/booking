@@ -96,6 +96,7 @@ export class BookingService {
     name: string;
     phone: string;
     email: string;
+    lang?: string;
   }) {
     const token = this.generateToken();
     const cancellationId = this.generateToken();
@@ -105,8 +106,9 @@ export class BookingService {
     const formattedDate = booking.date.split('-').reverse().join('.');
     const vocativeName = this.toVocative(this.capitalize(booking.name));
 
-    const confirmUrl = `https://booking-ashen-nine.vercel.app/confirm?bookingId=${bookingId}&token=${token}`;
-    const cancelUrl = `https://booking-ashen-nine.vercel.app/cancel?id=${bookingId}&token=${cancellationId}`;
+    const baseUrl = window.location.origin;
+    const confirmUrl = `${baseUrl}/confirm?bookingId=${bookingId}&token=${token}`;
+    const cancelUrl = `${baseUrl}/cancel?id=${bookingId}&token=${cancellationId}`;
 
     const emailContent = this.emailTemplate.getConfirmationEmail({
       vocativeName,
@@ -116,7 +118,13 @@ export class BookingService {
       confirmUrl,
       cancelUrl,
       bookingId,
+      lang: booking.lang ?? 'sr',
     });
+
+    // TTL: expire at midnight the day after the booking date
+    // Firebase TTL policy will auto-delete the document after this timestamp
+    const [year, month, day] = booking.date.split('-').map(Number);
+    const expireAt = new Date(year, month - 1, day + 1, 0, 0, 0);
 
     await setDoc(newDocRef, {
       ...booking,
@@ -124,6 +132,7 @@ export class BookingService {
       confirmationToken: token,
       cancellationId,
       createdAt: new Date(),
+      expireAt, // TTL field — Firestore deletes doc automatically after this
       to: [booking.email],
       message: emailContent,
     });
@@ -187,15 +196,6 @@ export class BookingService {
 
     await updateDoc(bookingRef, { status: 'confirmed', expireAt: null });
     return 'success';
-  }
-
-  /* ---------- ČIŠĆENJE STARIH TERMINA ---------- */
-  async cleanupOldBookings(): Promise<void> {
-    const today = new Date().toISOString().split('T')[0];
-    const snapshot = await getDocs(
-      query(this.bookingsRef, where('date', '<', today)),
-    );
-    await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
   }
 
   /* ---------- NERADNI DANI (sessionStorage cache) ---------- */

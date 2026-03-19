@@ -6,5 +6,5 @@
     <router-outlet></router-outlet>
   </main>
 
-  <app-footer *ngIf="showFooter"></app-footer>
+  <app-footer *ngIf="showFooter && !isLoading"></app-footer>
 </div>

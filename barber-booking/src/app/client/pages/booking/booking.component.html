@@ -2,11 +2,11 @@
   <div class="booking-card">
     <div *ngIf="availableDates.length === 0" class="loader-container">
       <div class="spinner"></div>
-      <p>Učitavanje...</p>
+      <p>{{ "ADMIN.LOADING" | translate }}</p>
     </div>
 
     <div *ngIf="availableDates.length > 0" class="content-fade-in">
-      <h2>Zakaži termin</h2>
+      <h2>{{ "BOOKING.TITLE" | translate }}</h2>
 
       <app-date-selector
         [availableDates]="availableDates"
@@ -14,10 +14,18 @@
         [disabled]="!!successMessage"
         (dateChange)="onDateChanged($event)"
       />
+
       <div class="snapshot-error" *ngIf="snapshotError">
-        <span>⚠️ Ne možemo učitati zauzetost termina.</span>
-        <button (click)="retrySnapshot()">Pokušaj ponovo</button>
+        <span>⚠️ {{ "BOOKING.SNAPSHOT_ERROR" | translate }}</span>
+        <button (click)="retrySnapshot()">
+          {{ "BOOKING.RETRY" | translate }}
+        </button>
       </div>
+
+      <div class="auto-advance-msg" *ngIf="autoAdvanceMessage">
+        ℹ️ {{ autoAdvanceMessage }}
+      </div>
+
       <app-time-selector
         [times]="filteredTimes"
         [bookedTimes]="bookedTimes"
