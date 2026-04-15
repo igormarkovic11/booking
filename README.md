@@ -7,6 +7,13 @@
 
 A modern, responsive barber shop booking application built with Angular 18, Firebase, and Angular Material. The application provides a seamless booking experience for clients and comprehensive management tools for administrators.
 
+<<<<<<< HEAD
+=======
+## 🌐 Live Demo
+
+Visit the live website: [https://booking-ashen-nine.vercel.app](https://booking-ashen-nine.vercel.app)
+
+>>>>>>> 1d0b9f797c4f3426136f1b62aaa4868ec27168ef
 ## ✨ Features
 
 ### Client Features

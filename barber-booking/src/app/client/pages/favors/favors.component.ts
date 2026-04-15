@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-favors',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [TranslateModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './favors.component.html',
   styleUrl: './favors.component.css',
 })

@@ -1,0 +1,164 @@
+{
+  "NAV": {
+    "ABOUT": "O nama",
+    "CONTACT": "Kontakt",
+    "SERVICES": "Usluge",
+    "BOOK": "Zakaži termin"
+  },
+  "HOME": {
+    "SUBTITLE": "Rezervišite termin brzo i jednostavno",
+    "CTA": "Zakaži termin"
+  },
+  "BOOKING": {
+    "TITLE": "Zakaži termin",
+    "TODAY": "Danas",
+    "SELECT_DATE": "Odaberite datum",
+    "SELECT_TIME": "Odaberite termin",
+    "SERVICES_TITLE": "Koje usluge želiš?",
+    "SERVICES_OPTIONAL": "(opciono)",
+    "SUBMIT": "Završi",
+    "SUBMITTING": "Slanje...",
+    "SUCCESS": "Poslali smo ti link za potvrdu na {{email}}. Molimo te da klikneš na link u narednih 15 minuta kako bi osigurao svoj termin.",
+    "ERROR_DATE_TIME": "Odaberi datum i termin",
+    "ERROR_NAME_PHONE": "Unesi ime i broj telefona",
+    "ERROR_EMAIL": "Unesi validan email",
+    "ERROR_PHONE": "Unesite ispravan broj telefona (min. 9 cifara)",
+    "ERROR_SLOT_TAKEN": "Termin je upravo zauzet 😕",
+    "ERROR_NO_INTERNET": "Nema internet konekcije. Provjeri mrežu i pokušaj ponovo.",
+    "ERROR_GENERIC": "Došlo je do greške. Pokušajte ponovo.",
+    "SNAPSHOT_ERROR": "Ne možemo učitati zauzetost termina.",
+    "RETRY": "Pokušaj ponovo",
+    "AUTO_ADVANCE": "Svi termini su zauzeti, prebačeni ste na sljedeći dostupni datum.",
+    "ALL_TAKEN": "Svi termini u narednim danima su zauzeti. Molimo pokušajte kasnije.",
+    "SERVICES": {
+      "HAIRCUT": "Šišanje",
+      "SHAVE": "Brijanje",
+      "STYLING": "Stilizovanje",
+      "TRIM": "Trimovanje"
+    },
+    "SUCCESS_TITLE": "Skoro gotovo!",
+    "SUCCESS_CLOSE": "U redu"
+  },
+  "FORM": {
+    "NAME": "Ime",
+    "PHONE": "Telefon",
+    "EMAIL": "Email",
+    "NAME_REQUIRED": "Ime je obavezno",
+    "NAME_MIN": "Ime mora imati najmanje 2 karaktera",
+    "PHONE_REQUIRED": "Telefon je obavezan",
+    "PHONE_MIN": "Telefon mora imati najmanje 9 cifara",
+    "PHONE_INVALID": "Unesite ispravan broj telefona",
+    "EMAIL_REQUIRED": "Email je obavezan",
+    "EMAIL_INVALID": "Unesite validan email"
+  },
+  "CONFIRM": {
+    "LOADING": "Provjeravamo potvrdu...",
+    "SUCCESS": "Vaš termin je potvrđen! Vidimo se uskoro. ✂️",
+    "EXPIRED": "Ovaj link za potvrdu je istekao. Molimo rezervišite ponovo.",
+    "ALREADY": "Ovaj termin je već potvrđen.",
+    "NOT_FOUND": "Termin nije pronađen.",
+    "INVALID": "Nevažeći link za potvrdu.",
+    "SLOT_TAKEN": "Ovaj termin je zauzeo neko drugi. Molimo rezervišite ponovo.",
+    "HOME": "Nazad na početnu"
+  },
+  "CANCEL": {
+    "LOADING": "Otkazujemo termin...",
+    "SUCCESS": "Vaš termin je uspješno otkazan.",
+    "ERROR": "Nije moguće otkazati. Link može biti nevažeći ili već iskorišten.",
+    "HOME": "Nazad na početnu"
+  },
+  "ADMIN": {
+    "LOGIN_TITLE": "Admin pristup",
+    "LOGIN_SUBTITLE": "Unesite PIN za nastavak",
+    "PIN_PLACEHOLDER": "••••",
+    "CONFIRM_BTN": "Potvrdi",
+    "CONFIRMING": "Provjera...",
+    "WRONG_PIN": "Pogrešan PIN. Pokušajte ponovo.",
+    "DASHBOARD_TITLE": "Pregled termina",
+    "DAY_OFF_OPEN": "🔓 Otvori dan",
+    "DAY_OFF_CLOSE": "🚫 Zatvori dan",
+    "NEW_APPOINTMENT": "Novi termin",
+    "LOGOUT": "Odjavi se",
+    "DAY_OFF_BANNER": "⚠️ DAN JE OZNAČEN KAO NERADNI",
+    "NO_BOOKINGS": "Nema rezervacija za ovaj dan.",
+    "LOADING": "Učitavanje...",
+    "DAY_UPDATED": "Dan je ažuriran",
+    "APPOINTMENT_DELETED": "Termin je obrisan",
+    "APPOINTMENT_ADDED": "Termin je dodan",
+    "ERROR_DELETE": "Greška pri brisanju termina",
+    "ERROR_ADD": "Greška pri dodavanju termina",
+    "ERROR_DAY": "Greška pri ažuriranju dana",
+    "NUMBER_COPIED": "Broj kopiran",
+    "LOAD_ERROR": "Nije moguće učitati podatke.",
+    "RETRY": "🔄 Pokušaj ponovo"
+  },
+  "ABOUT": {
+    "TITLE": "O nama",
+    "SUBTITLE": "Više od frizure — mjesto gdje stil ima karakter.",
+    "STORY_TITLE": "Naša priča",
+    "STORY_TEXT": "Hairstyle Vidaković je mjesto gdje se tradicija susreće sa modernim stilom. Godinama gradimo povjerenje kroz kvalitet, preciznost i dobar razgovor.",
+    "WHY_TITLE": "Zašto baš mi?",
+    "WHY_1": "✂️ Iskusni i posvećeni barberi",
+    "WHY_2": "🕒 Poštujemo vaše vrijeme",
+    "WHY_3": "💈 Prijatan i profesionalan ambijent"
+  },
+  "CONTACT": {
+    "TITLE": "Kontakt",
+    "PHONE": "📞 +381 21 123 456",
+    "EMAIL": "✉️ info@hairstylevidakovic.rs",
+    "ADDRESS": "📍 Novi Sad",
+    "HOURS_TITLE": "Radno vrijeme",
+    "MON_FRI": "Pon – Pet: 09:00 – 18:00",
+    "SAT": "Subota: 09:00 – 15:00",
+    "SUN": "Nedjelja: Zatvoreno",
+    "MAP_LOADING": "Mapa se učitava..."
+  },
+  "SERVICES_PAGE": {
+    "TITLE": "Naše usluge",
+    "SUBTITLE": "Profesionalna njega, moderan stil i posvećenost detaljima.",
+    "HAIRCUT": "Šišanje",
+    "HAIRCUT_DESC": "Precizno šišanje prilagođeno tvom stilu i obliku lica.",
+    "SHAVE": "Brijanje",
+    "SHAVE_DESC": "Klasično ili moderno brijanje uz maksimalnu udobnost.",
+    "STYLING": "Stilizovanje",
+    "STYLING_DESC": "Završni detalji i oblikovanje frizure po tvojoj želji.",
+    "TRIM": "Trimovanje",
+    "TRIM_DESC": "Uredjivanje brade i kontura za čist i uredan izgled."
+  },
+  "FOOTER": {
+    "CONTACT_TITLE": "Kontakt",
+    "HOURS_TITLE": "Radno vrijeme",
+    "LOCATION_TITLE": "Lokacija",
+    "MON_FRI": "Uto – Sub: 09:00 – 18:00",
+    "SUN_MON": "Ned – Pon: Zatvoreno",
+    "COPYRIGHT": "© 2026 Hairstyle Vidaković"
+  },
+  "OFFLINE": "Nema internet konekcije — promjene se neće sačuvati",
+  "DELETE_MODAL": {
+    "TITLE": "Obriši termin",
+    "MESSAGE": "Da li ste sigurni da želite obrisati ovaj termin?",
+    "CONFIRM": "Obriši",
+    "CANCEL": "Odustani"
+  },
+  "QUICK_ADD_MODAL": {
+    "TITLE": "Novi termin",
+    "CONFIRM": "Sačuvaj",
+    "CANCEL": "Odustani"
+  },
+  "PIN_MODAL": {
+    "TITLE": "Unesite PIN",
+    "CONFIRM": "Potvrdi",
+    "CANCEL": "Odustani"
+  },
+  "NOTIFICATION": {
+    "NEW": "Nova rezervacija!"
+  },
+  "QUICK_ADD": {
+    "CLIENT_NAME": "Ime klijenta",
+    "NAME_PLACEHOLDER": "Unesite ime...",
+    "PHONE": "Telefon (opciono)",
+    "EMAIL": "Email (za obaveštenja)",
+    "SELECT_TIME": "Izaberi vrijeme",
+    "SERVICES": "Usluge"
+  }
+}

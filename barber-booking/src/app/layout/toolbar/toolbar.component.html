@@ -1,5 +1,10 @@
 <mat-toolbar class="toolbar">
-  <a routerLink="/" class="logo-link">
+  <a
+    class="logo-link"
+    (click)="onLogoClick()"
+    style="cursor: pointer"
+    routerLink="/"
+  >
     <img src="assets/images/logoNoBg.png" alt="Logo" class="nav-logo" />
     <span class="logo">Hairstyle Vidaković</span>
   </a>
@@ -14,13 +19,28 @@
       routerLinkActive="active-link"
       [routerLinkActiveOptions]="{ exact: true }"
     >
-      O nama
+      {{ "NAV.ABOUT" | translate }}
     </a>
-    <a mat-button routerLink="/contact" routerLinkActive="active-link"
-      >Kontakt</a
-    >
-    <a mat-button routerLink="/favor" routerLinkActive="active-link">Usluge</a>
+    <a mat-button routerLink="/contact" routerLinkActive="active-link">
+      {{ "NAV.CONTACT" | translate }}
+    </a>
+    <a mat-button routerLink="/favor" routerLinkActive="active-link">
+      {{ "NAV.SERVICES" | translate }}
+    </a>
   </nav>
+
+  <!-- LANGUAGE SWITCHER (desktop) -->
+  <div class="lang-switcher">
+    <button
+      *ngFor="let lang of langService.languages"
+      class="lang-btn"
+      [class.active]="langService.current === lang.code"
+      (click)="switchLang(lang.code)"
+    >
+      <span class="fi" [ngClass]="'fi-' + lang.flag"></span>
+      <span class="lang-label">{{ lang.label }}</span>
+    </button>
+  </div>
 
   <!-- BOOKING BUTTON -->
   <button
@@ -29,10 +49,21 @@
     class="booking-btn"
     routerLink="/booking"
   >
-    Zakaži termin
+    {{ "NAV.BOOK" | translate }}
   </button>
 
-  <!-- HAMBURGER (MOBILE) -->
+  <!-- ADMIN LOGOUT (desktop) -->
+  <button
+    *ngIf="isAdmin$ | async"
+    mat-stroked-button
+    class="logout-btn"
+    (click)="logout()"
+  >
+    <mat-icon>logout</mat-icon>
+    <span>{{ "ADMIN.LOGOUT" | translate }}</span>
+  </button>
+
+  <!-- HAMBURGER (mobile) -->
   <button mat-icon-button class="menu-btn" (click)="toggleMenu()">
     <mat-icon>menu</mat-icon>
   </button>
@@ -40,24 +71,48 @@
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" *ngIf="menuOpen">
-  <a routerLink="/about" routerLinkActive="active-mobile" (click)="closeMenu()"
-    >O nama</a
-  >
+  <a routerLink="/about" routerLinkActive="active-mobile" (click)="closeMenu()">
+    {{ "NAV.ABOUT" | translate }}
+  </a>
   <a
     routerLink="/contact"
     routerLinkActive="active-mobile"
     (click)="closeMenu()"
-    >Kontakt</a
   >
-  <a routerLink="/favor" routerLinkActive="active-mobile" (click)="closeMenu()"
-    >Usluge</a
-  >
+    {{ "NAV.CONTACT" | translate }}
+  </a>
+  <a routerLink="/favor" routerLinkActive="active-mobile" (click)="closeMenu()">
+    {{ "NAV.SERVICES" | translate }}
+  </a>
   <a
     routerLink="/booking"
     routerLinkActive="active-mobile"
     class="highlight"
     (click)="closeMenu()"
   >
-    Zakaži termin
+    {{ "NAV.BOOK" | translate }}
   </a>
+
+  <!-- LANGUAGE SWITCHER (mobile) -->
+  <div class="lang-switcher-mobile">
+    <button
+      *ngFor="let lang of langService.languages"
+      class="lang-btn"
+      [class.active]="langService.current === lang.code"
+      (click)="switchLang(lang.code); closeMenu()"
+    >
+      <span class="fi" [ngClass]="'fi-' + lang.flag"></span>
+      <span class="lang-label">{{ lang.label }}</span>
+    </button>
+  </div>
+
+  <!-- ADMIN LOGOUT (mobile) -->
+  <button
+    *ngIf="isAdmin$ | async"
+    class="logout-mobile"
+    (click)="logout(); closeMenu()"
+  >
+    <mat-icon>logout</mat-icon>
+    <span>{{ "ADMIN.LOGOUT" | translate }}</span>
+  </button>
 </div>
