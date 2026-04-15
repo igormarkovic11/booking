@@ -1,9 +1,10 @@
 <div class="app-background">
   <app-toolbar></app-toolbar>
+  <app-offline-banner></app-offline-banner>
 
   <main class="content">
     <router-outlet></router-outlet>
   </main>
 
-  <app-footer *ngIf="showFooter"></app-footer>
+  <app-footer *ngIf="showFooter && !isLoading"></app-footer>
 </div>

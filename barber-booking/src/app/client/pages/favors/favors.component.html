@@ -1,36 +1,46 @@
 <section class="services">
-  <h1>Naše usluge</h1>
-  <p class="subtitle">
-    Profesionalna njega, moderan stil i posvećenost detaljima.
-  </p>
+  <h1>{{ "SERVICES_PAGE.TITLE" | translate }}</h1>
+  <p class="subtitle">{{ "SERVICES_PAGE.SUBTITLE" | translate }}</p>
 
   <div class="services-grid">
     <!-- ŠIŠANJE -->
     <div class="service-card">
-      <img src="assets/icons/scissors.png" alt="Šišanje" />
-      <h3>Šišanje</h3>
-      <p>Precizno šišanje prilagođeno tvom stilu i obliku lica.</p>
+      <img
+        src="assets/icons/scissors.png"
+        [attr.alt]="'SERVICES_PAGE.HAIRCUT' | translate"
+      />
+      <h3>{{ "SERVICES_PAGE.HAIRCUT" | translate }}</h3>
+      <p>{{ "SERVICES_PAGE.HAIRCUT_DESC" | translate }}</p>
     </div>
 
     <!-- BRIJANJE -->
     <div class="service-card">
-      <img src="assets/icons/razor.png" alt="Brijanje" />
-      <h3>Brijanje</h3>
-      <p>Klasično ili moderno brijanje uz maksimalnu udobnost.</p>
+      <img
+        src="assets/icons/razor.png"
+        [attr.alt]="'SERVICES_PAGE.SHAVE' | translate"
+      />
+      <h3>{{ "SERVICES_PAGE.SHAVE" | translate }}</h3>
+      <p>{{ "SERVICES_PAGE.SHAVE_DESC" | translate }}</p>
     </div>
 
     <!-- STILIZOVANJE -->
     <div class="service-card">
-      <img src="assets/icons/hairdress.png" alt="Stilizovanje" />
-      <h3>Stilizovanje</h3>
-      <p>Završni detalji i oblikovanje frizure po tvojoj želji.</p>
+      <img
+        src="assets/icons/hairdress.png"
+        [attr.alt]="'SERVICES_PAGE.STYLING' | translate"
+      />
+      <h3>{{ "SERVICES_PAGE.STYLING" | translate }}</h3>
+      <p>{{ "SERVICES_PAGE.STYLING_DESC" | translate }}</p>
     </div>
 
     <!-- TRIMOVANJE -->
     <div class="service-card">
-      <img src="assets/icons/electric-razor.png" alt="Trimovanje" />
-      <h3>Trimovanje</h3>
-      <p>Uredjivanje brade i kontura za čist i uredan izgled.</p>
+      <img
+        src="assets/icons/electric-razor.png"
+        [attr.alt]="'SERVICES_PAGE.TRIM' | translate"
+      />
+      <h3>{{ "SERVICES_PAGE.TRIM" | translate }}</h3>
+      <p>{{ "SERVICES_PAGE.TRIM_DESC" | translate }}</p>
     </div>
   </div>
 </section>

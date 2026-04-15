@@ -1,105 +1,59 @@
 <div class="booking-page">
-  <div class="booking-card" [class.ready]="availableDates.length > 0">
+  <div class="booking-card">
     <div *ngIf="availableDates.length === 0" class="loader-container">
       <div class="spinner"></div>
-      <p>Učitavanje...</p>
+      <p>{{ "ADMIN.LOADING" | translate }}</p>
     </div>
 
     <div *ngIf="availableDates.length > 0" class="content-fade-in">
-      <h2>Zakaži termin</h2>
-    </div>
-    <p class="step-instruction">Izaberi datum</p>
-    <select
-      [(ngModel)]="selectedDate"
-      (change)="onDateChange()"
-      class="date-dropdown"
-    >
-      <option *ngFor="let date of availableDates" [value]="date">
-        <ng-container *ngIf="date === (today | date: 'yyyy-MM-dd')">
-          Danas, {{ date | date: "dd.MM.yyyy." }}
-        </ng-container>
-        <ng-container *ngIf="date !== (today | date: 'yyyy-MM-dd')">
-          {{ date | date: "EEEE, dd.MM.yyyy." | titlecase }}
-        </ng-container>
-      </option>
-    </select>
+      <h2>{{ "BOOKING.TITLE" | translate }}</h2>
 
-    <p class="step-instruction">Odaberite termin</p>
-    <div class="time-grid">
-      <button
-        *ngFor="let time of filteredTimes"
-        (click)="!isTimeBooked(time) && selectTime(time)"
-        [disabled]="isTimeBooked(time) || successMessage"
-        [class.active]="selectedTime === time"
-        [class.booked]="isTimeBooked(time)"
-      >
-        {{ time }}
-      </button>
-    </div>
+      <app-date-selector
+        [availableDates]="availableDates"
+        [selectedDate]="selectedDate"
+        [disabled]="!!successMessage"
+        (dateChange)="onDateChanged($event)"
+      />
 
-    <div class="services-box" [style.opacity]="successMessage ? '0.5' : '1'">
-      <p class="services-title">Koje usluge želiš? <span>(opciono)</span></p>
-      <div class="checkboxes">
-        <label *ngFor="let service of services" class="service-label">
-          <input
-            type="checkbox"
-            [checked]="service.selected"
-            (change)="toggleService(service)"
-            [disabled]="successMessage"
-          />
-          <span>{{ service.label }}</span>
-        </label>
-      </div>
-    </div>
-
-    <div class="submission-area">
-      <div class="input-group" *ngIf="!successMessage">
-        <input
-          type="text"
-          placeholder="Ime"
-          [(ngModel)]="name"
-          class="custom-input"
-          [disabled]="loading"
-        />
-        <input
-          type="text"
-          placeholder="Telefon"
-          [(ngModel)]="phone"
-          class="custom-input"
-          [disabled]="loading"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          [(ngModel)]="email"
-          class="custom-input"
-          [disabled]="loading"
-        />
-
-        <p *ngIf="errorMessage" class="error-text">{{ errorMessage }}</p>
-
-        <button
-          class="submit-btn"
-          (click)="submitBooking()"
-          [disabled]="
-            loading ||
-            !selectedTime ||
-            !name ||
-            !phone ||
-            !email ||
-            !isValidEmail(email)
-          "
-        >
-          <span *ngIf="!loading">Završi</span>
-          <span *ngIf="loading">Slanje...</span>
+      <div class="snapshot-error" *ngIf="snapshotError">
+        <span>⚠️ {{ "BOOKING.SNAPSHOT_ERROR" | translate }}</span>
+        <button (click)="retrySnapshot()">
+          {{ "BOOKING.RETRY" | translate }}
         </button>
       </div>
 
-      <div *ngIf="successMessage" class="inline-success-box">
-        <div class="success-icon">✉️</div>
-        <h3>Skoro gotovo!</h3>
-        <p class="success-text">{{ successMessage }}</p>
-        <button class="close-btn" (click)="successMessage = ''">U redu</button>
+      <div class="auto-advance-msg" *ngIf="autoAdvanceMessage">
+        ℹ️ {{ autoAdvanceMessage }}
+      </div>
+
+      <app-time-selector
+        [times]="filteredTimes"
+        [bookedTimes]="bookedTimes"
+        [selectedTime]="selectedTime"
+        [disabled]="!!successMessage"
+        (timeChange)="selectedTime = $event"
+      />
+
+      <app-service-selector
+        [services]="services"
+        [disabled]="!!successMessage"
+        (toggled)="onServiceToggled($event)"
+      />
+
+      <div class="submission-area">
+        <app-booking-form
+          *ngIf="!successMessage"
+          [loading]="loading"
+          [errorMessage]="errorMessage"
+          [canSubmit]="canSubmit"
+          (submitted)="onFormSubmitted($event)"
+        />
+
+        <app-success-message
+          *ngIf="successMessage"
+          [message]="successMessage"
+          (closed)="onSuccessClosed()"
+        />
       </div>
     </div>
   </div>

@@ -1,0 +1,52 @@
+.inline-success-box {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+
+  .success-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    color: #4caf50;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+  }
+
+  .success-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 20px;
+  }
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

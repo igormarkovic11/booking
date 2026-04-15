@@ -18,300 +18,20 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   color: white;
   transition: opacity 0.3s ease-in-out;
-}
-
-.booking-card h2 {
-  text-align: center;
-  margin-bottom: 16px;
-  font-weight: 600;
-  font-size: 1.5rem;
-}
-
-.step-instruction {
-  margin-bottom: 12px;
-  font-size: 0.95rem;
-  opacity: 0.85;
-  text-align: center;
-}
-
-/* DROPDOWN */
-.date-dropdown {
-  width: 100%;
-  padding: 8px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 16px;
-  font-size: 1rem;
-  cursor: pointer; /* dodaj ovo */
-}
-
-.date-dropdown option {
-  background: #333;
-  color: white;
-}
-
-/* TERMINI */
-.time-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.time-grid button {
-  height: 44px;
-  font-size: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  background: rgba(255, 255, 255, 0.05);
-  transition:
-    background 0.2s ease,
-    transform 0.1s ease; /* Brža transformacija */
-  cursor: pointer;
-
-  /* DODATO: Sprečava sivi blic i poboljšava odziv na mobilnom */
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
-  user-select: none; /* Sprečava slučajno selektovanje teksta tokom klika */
-}
-
-/* IZMENJENO: Hover se aktivira SAMO na uređajima sa mišem (Desktop) */
-@media (hover: hover) {
-  .time-grid button:hover:not(.booked):not(.active) {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1px);
-  }
-}
-
-/* NOVO: Instant feedback čim prst dotakne ekran */
-.time-grid button:active {
-  background: rgba(25, 118, 210, 0.4);
-  transform: scale(0.96);
-}
-
-/* IZMENJENO: Aktivna klasa mora biti "najjača" */
-.time-grid button.active {
-  background: #1976d2 !important;
-  color: white !important;
-  border: none !important;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-  transform: scale(1) !important; /* Vraća na punu veličinu kad je izabrano */
-}
-
-.time-grid button.booked {
-  opacity: 0.3;
-  pointer-events: none;
-  text-decoration: line-through;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-/* hover efekt
-.time-grid button:hover {
-  background: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-} */
-
-/* CHECKBOXOVI */
-.services-box {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  padding: 12px;
-  margin-bottom: 20px;
-}
-
-.services-title {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin-bottom: 8px;
-}
-
-.checkboxes label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: white;
-  font-size: 0.95rem;
-  margin-bottom: 8px;
-  cursor: pointer; /* dodaj ovo */
-}
-
-.checkboxes input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #1976d2; /* moderni blue za checkbox */
-  cursor: pointer; /* dodaj ovo */
-}
-
-/* INPUT POLJA */
-.custom-input {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
-  font-size: 1rem;
-}
-
-.custom-input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* DUGME */
-.submit-btn {
-  width: 100%;
-  padding: 12px 0;
-  border-radius: 12px;
-  background: #1976d2;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-}
-
-.submit-btn:disabled {
-  background: rgba(25, 118, 210, 0.5);
-  cursor: not-allowed;
-}
-
-/* SUCCESS SCREEN */
-.success-container {
-  text-align: center;
-  padding: 20px 10px;
-  animation: fadeIn 0.4s ease-out;
-
-  .success-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
-  }
 
   h2 {
-    color: #4caf50;
+    text-align: center;
     margin-bottom: 16px;
-  }
-
-  .success-text {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin-bottom: 30px;
-    opacity: 0.9;
+    font-weight: 600;
+    font-size: 1.5rem;
   }
 }
 
-.error-text {
-  color: #ff5252;
-  font-size: 0.9rem;
-  text-align: center;
-  margin-bottom: 12px;
-  animation: shake 0.2s ease-in-out;
-}
-
-/* Animacija za pojavljivanje */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-5px);
-  }
-  75% {
-    transform: translateX(5px);
-  }
-}
-
-/* DESKTOP */
-@media (min-width: 768px) {
-  .time-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .booking-card {
-    padding: 32px 24px;
-  }
-
-  .booking-card h2 {
-    font-size: 1.8rem;
-  }
-
-  .submit-btn {
-    font-size: 1.1rem;
-  }
-}
-
-/* NOVO: Stil za poruku unutar forme */
 .submission-area {
   position: relative;
-  min-height: 200px; /* Da ne bi skakala visina kartice */
+  min-height: 200px;
 }
 
-.inline-success-box {
-  background: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.4);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  animation: fadeIn 0.4s ease-out;
-}
-
-.inline-success-box .success-icon {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-.inline-success-box h3 {
-  color: #4caf50;
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-}
-
-.inline-success-box .success-text {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 20px;
-}
-
-.close-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 24px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Onemogući klikove na gornji deo dok je poruka tu */
-.date-dropdown:disabled,
-.time-grid button:disabled:not(.booked) {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Stil za loader */
 .loader-container {
   display: flex;
   flex-direction: column;
@@ -331,17 +51,69 @@
   margin-bottom: 10px;
 }
 
-/* Animacija za sadržaj */
 .content-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
+.snapshot-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(183, 28, 28, 0.15);
+  border: 1px solid rgba(183, 28, 28, 0.3);
+  color: #ef9a9a;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+
+  button {
+    background: transparent;
+    border: 1px solid rgba(239, 154, 154, 0.4);
+    border-radius: 8px;
+    color: #ef9a9a;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(239, 154, 154, 0.1);
+    }
   }
-  100% {
-    transform: rotate(360deg);
+}
+
+.auto-advance-msg {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(25, 118, 210, 0.12);
+  border: 1px solid rgba(25, 118, 210, 0.3);
+  color: #90caf9;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+  animation: fadeInAutoAdvanceMsg 0.3s ease-out;
+}
+
+@keyframes fadeInAutoAdvanceMsg {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 768px) {
+  .booking-card {
+    padding: 32px 24px;
+
+    h2 {
+      font-size: 1.8rem;
+    }
   }
 }
 
@@ -353,5 +125,14 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -2,32 +2,31 @@
   <div class="confirm-card">
     <div *ngIf="status === 'loading'" class="status-box">
       <div class="spinner"></div>
-      <h2>Provjeravamo potvrdu...</h2>
+      <h2>{{ "CONFIRM.LOADING" | translate }}</h2>
     </div>
 
     <div *ngIf="status === 'success'" class="status-box">
       <div class="icon success">✅</div>
-      <h2>Termin je potvrđen!</h2>
-      <p>Vidimo se u zakazanom terminu.</p>
+      <h2>{{ "CONFIRM.SUCCESS" | translate }}</h2>
       <button class="home-btn" (click)="navigateToHome()">
-        Vrati se na početnu
+        {{ "CONFIRM.HOME" | translate }}
       </button>
     </div>
 
     <div *ngIf="status === 'expired'" class="status-box">
       <div class="icon warning">⏳</div>
-      <h2>Link je istekao</h2>
-      <p>Rok za potvrdu je 15 minuta. Molimo pokušajte ponovo.</p>
+      <h2>{{ "CONFIRM.EXPIRED" | translate }}</h2>
       <button class="home-btn" (click)="navigateToHome()">
-        Nova rezervacija
+        {{ "CONFIRM.HOME" | translate }}
       </button>
     </div>
 
     <div *ngIf="status === 'already'" class="status-box">
       <div class="icon info">ℹ️</div>
-      <h2>Već potvrđeno</h2>
-      <p>Vaš termin je već ranije uspješno potvrđen.</p>
-      <button class="home-btn" (click)="navigateToHome()">Početna</button>
+      <h2>{{ "CONFIRM.ALREADY" | translate }}</h2>
+      <button class="home-btn" (click)="navigateToHome()">
+        {{ "CONFIRM.HOME" | translate }}
+      </button>
     </div>
 
     <div
@@ -35,10 +34,9 @@
       class="status-box"
     >
       <div class="icon error">❌</div>
-      <h2>Greška</h2>
-      <p>Rezervacija nije pronađena ili je link nevažeći.</p>
+      <h2>{{ "CONFIRM.INVALID" | translate }}</h2>
       <button class="home-btn" (click)="navigateToHome()">
-        Vrati se nazad
+        {{ "CONFIRM.HOME" | translate }}
       </button>
     </div>
   </div>
