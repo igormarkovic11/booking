@@ -9,4 +9,6 @@ export const environment = {
     appId: '1:281127131930:web:eb5a9dfee5c8712532aaa3',
     measurementId: 'G-XSD8CDL4CX',
   },
+  adminEmail: 'imarkovic132@gmail.com',
+  adminSecret: 'Barbershop#HB',
 };
